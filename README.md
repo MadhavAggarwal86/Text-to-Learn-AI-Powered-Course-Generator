@@ -87,6 +87,26 @@ npm run dev
    model times out or is overloaded, a fallback model is used. AI-suggested links are checked and
    dead ones dropped.
 
+## REST API
+
+All responses are JSON; errors look like `{ "error": { "message", "details"? } }`.
+
+| Method | Path                          | Purpose                                                         |
+| ------ | ----------------------------- | --------------------------------------------------------------- |
+| GET    | `/api/health`                 | API and database status                                         |
+| POST   | `/api/courses/generate`       | `{ topic, difficulty? }` → generate and save a course (201)     |
+| GET    | `/api/courses`                | Your courses, newest first, with lesson and generated counts    |
+| GET    | `/api/courses/:id`            | Course with ordered modules and lesson titles                   |
+| DELETE | `/api/courses/:id`            | Delete a course with its modules and lessons (204)              |
+| GET    | `/api/lessons/:id`            | Lesson content; generated and saved the first time it is opened |
+| POST   | `/api/lessons/:id/regenerate` | Replace a lesson's content with a new version                   |
+
+- **Ownership:** other users' courses and lessons answer 404.
+- **Rate limits (per user):** 300 requests / 15 min overall, 10 course generations / hour,
+  20 lesson regenerations / hour (429 when exceeded).
+- **Users (temporary):** until Auth0 is added, every request acts as one local user; the
+  `x-dev-user` header switches users for testing.
+
 ## Deployment
 
 - **Backend → Render:** New Web Service, root directory `server`, build `npm install`,
