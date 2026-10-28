@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
+import RequireAuth from './auth/RequireAuth.jsx';
 import Skeleton from './components/common/Skeleton.jsx';
 import AppLayout from './components/layout/AppLayout.jsx';
 import CoursePage from './pages/CoursePage.jsx';
@@ -16,13 +17,22 @@ export default function App() {
       <Routes>
         <Route path="/" element={<AppLayout />}>
           <Route index element={<Home />} />
-          <Route path="courses/:courseId" element={<CoursePage />} />
+          <Route
+            path="courses/:courseId"
+            element={
+              <RequireAuth>
+                <CoursePage />
+              </RequireAuth>
+            }
+          />
           <Route
             path="courses/:courseId/module/:moduleNumber/lesson/:lessonNumber"
             element={
-              <Suspense fallback={<Skeleton className="mx-auto h-96 max-w-3xl rounded-xl" />}>
-                <LessonPage />
-              </Suspense>
+              <RequireAuth>
+                <Suspense fallback={<Skeleton className="mx-auto h-96 max-w-3xl rounded-xl" />}>
+                  <LessonPage />
+                </Suspense>
+              </RequireAuth>
             }
           />
           <Route path="*" element={<NotFound />} />

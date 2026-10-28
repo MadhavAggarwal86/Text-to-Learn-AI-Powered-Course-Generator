@@ -1,6 +1,7 @@
 import { BookOpen, CheckCircle2, Circle, Plus, X } from 'lucide-react';
 import { useEffect } from 'react';
 import { Link, NavLink, useParams } from 'react-router-dom';
+import { useAuth } from '../../auth/AuthProvider.jsx';
 import { useCourse, useCourses } from '../../hooks/queries.js';
 import { lessonPath } from '../../utils/courseNav.js';
 import Skeleton from '../common/Skeleton.jsx';
@@ -11,6 +12,7 @@ import Skeleton from '../common/Skeleton.jsx';
  */
 export default function Sidebar({ open, onClose }) {
   const { courseId } = useParams();
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     if (!open) return;
@@ -52,7 +54,12 @@ export default function Sidebar({ open, onClose }) {
         </div>
 
         <nav className="flex-1 overflow-y-auto px-2 pb-6">
-          {courseId ? (
+          {/* Course data needs a signed-in user; don't request it before login. */}
+          {!isAuthenticated ? (
+            <p className="px-2 text-sm text-slate-500 dark:text-slate-400">
+              Log in to see your courses.
+            </p>
+          ) : courseId ? (
             <CourseOutlineNav courseId={courseId} onNavigate={onClose} />
           ) : (
             <MyCoursesNav onNavigate={onClose} />
