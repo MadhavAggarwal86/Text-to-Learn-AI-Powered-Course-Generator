@@ -9,6 +9,18 @@
       content="Text-to-Learn turns any topic into a structured, multi-module course with AI."
     />
     <title>Text-to-Learn</title>
+    <script>
+      // Apply the saved (or system) theme before first paint to avoid a light flash.
+      try {
+        const saved = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (saved === 'dark' || (!saved && prefersDark)) {
+          document.documentElement.classList.add('dark');
+        }
+      } catch {
+        // Storage unavailable: keep the light theme.
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

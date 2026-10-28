@@ -1,20 +1,23 @@
-import { Link, Outlet } from 'react-router-dom';
+import { useState } from 'react';
+import { Outlet } from 'react-router-dom';
+import ServerStatusBanner from '../common/ServerStatusBanner.jsx';
+import Sidebar from './Sidebar.jsx';
+import Topbar from './Topbar.jsx';
 
 export default function AppLayout() {
-  return (
-    <div className="flex min-h-screen flex-col">
-      <header className="border-b border-slate-200 bg-white/80 backdrop-blur dark:border-slate-800 dark:bg-slate-900/80">
-        <div className="mx-auto flex h-14 max-w-6xl items-center px-4">
-          <Link to="/" className="flex items-center gap-2 font-semibold">
-            <img src="/favicon.svg" alt="" className="h-7 w-7" />
-            Text-to-Learn
-          </Link>
-        </div>
-      </header>
+  // Only matters below the lg breakpoint, where the sidebar is a drawer.
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10">
-        <Outlet />
-      </main>
+  return (
+    <div className="min-h-screen">
+      <Topbar onMenuClick={() => setDrawerOpen(true)} />
+      <ServerStatusBanner />
+      <div className="mx-auto flex max-w-7xl">
+        <Sidebar open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+        <main className="min-w-0 flex-1 px-4 py-8 sm:px-6 lg:px-10">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }
