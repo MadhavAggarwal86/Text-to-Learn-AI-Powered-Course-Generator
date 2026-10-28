@@ -63,10 +63,11 @@ export async function createCourseTree({ outline, creator, prompt, difficulty })
 
 /**
  * A course with its modules (in order) and each module's lesson summaries (in order).
- * Lesson content is left out: the course page only needs titles.
+ * Lesson content is left out: the course page only needs titles. Pass `creator` to only
+ * match a course that user owns.
  */
-export async function getCourseTree(courseId) {
-  return Course.findById(courseId).populate({
+export async function getCourseTree(courseId, { creator } = {}) {
+  return Course.findOne({ _id: courseId, ...(creator && { creator }) }).populate({
     path: 'modules',
     options: { sort: { order: 1 } },
     populate: {
@@ -74,6 +75,42 @@ export async function getCourseTree(courseId) {
       select: 'title order isEnriched',
       options: { sort: { order: 1 } },
     },
+  });
+}
+
+const MAX_LISTED_COURSES = 50;
+
+/**
+ * A user's courses, newest first, with lesson progress for the course cards:
+ * `lessonCount` and `generatedCount` (lessons opened at least once).
+ */
+export async function listCourses(creator) {
+  const courses = await Course.find({ creator })
+    .sort({ createdAt: -1 })
+    .limit(MAX_LISTED_COURSES)
+    .select('title description difficulty tags modules createdAt updatedAt');
+
+  const counts = await Lesson.aggregate([
+    { $match: { course: { $in: courses.map((course) => course._id) } } },
+    {
+      $group: {
+        _id: '$course',
+        lessonCount: { $sum: 1 },
+        generatedCount: { $sum: { $cond: ['$isEnriched', 1, 0] } },
+      },
+    },
+  ]);
+  const countsByCourse = new Map(counts.map((c) => [String(c._id), c]));
+
+  return courses.map((course) => {
+    const { modules, ...json } = course.toJSON();
+    const count = countsByCourse.get(course.id);
+    return {
+      ...json,
+      moduleCount: modules.length,
+      lessonCount: count?.lessonCount ?? 0,
+      generatedCount: count?.generatedCount ?? 0,
+    };
   });
 }
 

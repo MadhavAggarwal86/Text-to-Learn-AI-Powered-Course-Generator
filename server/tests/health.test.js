@@ -23,6 +23,18 @@ describe('unknown routes', () => {
   });
 });
 
+describe('without a database connection', () => {
+  // This file never connects Mongoose, so it doubles as the "database down" case.
+  it('course routes fail fast with 503 instead of hanging', async () => {
+    const startedAt = Date.now();
+    const res = await request(app).get('/api/courses');
+
+    expect(res.status).toBe(503);
+    expect(res.body.error.message).toMatch(/database is not available/);
+    expect(Date.now() - startedAt).toBeLessThan(1000);
+  });
+});
+
 describe('CORS', () => {
   it('allows the configured client origin', async () => {
     const res = await request(app).get('/api/health').set('Origin', 'http://localhost:5173');

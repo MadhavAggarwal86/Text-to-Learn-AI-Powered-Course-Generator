@@ -15,7 +15,8 @@ const envSchema = z.object({
         .map((origin) => origin.trim())
         .filter(Boolean),
     ),
-  // Optional until the course API (Phase 3) needs it; tests use an in-memory server.
+  // Required in production (checked below). Locally the API still starts without it,
+  // but course routes answer 503; tests use an in-memory server.
   MONGO_URI: z.string().trim().optional().default(''),
 
   // Gemini. Without a key the server still runs; AI routes answer 503.
@@ -26,7 +27,12 @@ const envSchema = z.object({
   GEMINI_TIMEOUT_MS: z.coerce.number().int().positive().default(45_000),
 });
 
-const parsed = envSchema.safeParse(process.env);
+const parsed = envSchema
+  .refine((vars) => vars.NODE_ENV !== 'production' || vars.MONGO_URI, {
+    message: 'MONGO_URI is required in production',
+    path: ['MONGO_URI'],
+  })
+  .safeParse(process.env);
 
 if (!parsed.success) {
   console.error('Invalid environment variables:', z.flattenError(parsed.error).fieldErrors);
