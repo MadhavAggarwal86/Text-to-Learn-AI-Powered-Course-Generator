@@ -8,12 +8,14 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "ai:try": "node scripts/try-generate.js"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
+    "@google/genai": "^2.31.0",
     "cors": "^2.8.6",
     "dotenv": "^18.0.9",
     "express": "^5.3.0",

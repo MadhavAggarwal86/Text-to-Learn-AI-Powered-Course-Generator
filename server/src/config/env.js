@@ -17,6 +17,13 @@ const envSchema = z.object({
     ),
   // Optional until the course API (Phase 3) needs it; tests use an in-memory server.
   MONGO_URI: z.string().trim().optional().default(''),
+
+  // Gemini. Without a key the server still runs; AI routes answer 503.
+  GEMINI_API_KEY: z.string().trim().optional().default(''),
+  GEMINI_MODEL: z.string().trim().min(1).default('gemini-3.5-flash-lite'),
+  // Tried when the main model is overloaded or times out. Set to an empty value to disable.
+  GEMINI_FALLBACK_MODEL: z.string().trim().default('gemini-3.1-flash-lite'),
+  GEMINI_TIMEOUT_MS: z.coerce.number().int().positive().default(45_000),
 });
 
 const parsed = envSchema.safeParse(process.env);
