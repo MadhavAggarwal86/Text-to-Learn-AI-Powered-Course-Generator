@@ -4,7 +4,9 @@ import {
   fetchCourse,
   fetchCourses,
   fetchHealth,
+  fetchAudioTranscript,
   fetchLesson,
+  fetchLessonAudio,
   fetchVideos,
   generateCourse,
   regenerateLesson,
@@ -100,7 +102,12 @@ export function useRegenerateLesson() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: regenerateLesson,
-    onSuccess: (lesson) => queryClient.setQueryData(queryKeys.lesson(lesson.id), lesson),
+    onSuccess: (lesson) => {
+      queryClient.setQueryData(queryKeys.lesson(lesson.id), lesson);
+      // The server deleted the old audio explanation; forget the cached copy too.
+      queryClient.removeQueries({ queryKey: ['lessonAudio', lesson.id] });
+      queryClient.removeQueries({ queryKey: ['lessonAudioTranscript', lesson.id] });
+    },
   });
 }
 
@@ -111,6 +118,30 @@ export function useVideos(query) {
     queryFn: () => fetchVideos(query),
     staleTime: Infinity,
     // The block falls back to a YouTube search link, so don't retry a failing search.
+    retry: false,
+  });
+}
+
+/**
+ * The lesson's Hinglish audio as an object URL, fetched only once `requested` is true (the
+ * user clicked the button: creating it costs two AI calls). Kept for the session.
+ */
+export function useLessonAudio(lessonId, requested) {
+  return useQuery({
+    queryKey: ['lessonAudio', lessonId],
+    queryFn: async () => URL.createObjectURL(await fetchLessonAudio(lessonId)),
+    enabled: Boolean(lessonId) && requested,
+    staleTime: Infinity,
+    retry: false,
+  });
+}
+
+export function useAudioTranscript(lessonId, enabled) {
+  return useQuery({
+    queryKey: ['lessonAudioTranscript', lessonId],
+    queryFn: () => fetchAudioTranscript(lessonId),
+    enabled: Boolean(lessonId) && enabled,
+    staleTime: Infinity,
     retry: false,
   });
 }

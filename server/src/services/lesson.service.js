@@ -1,5 +1,6 @@
 import { Course, CourseModule, Lesson } from '../models/index.js';
 import { generateLessonContent } from './ai.service.js';
+import { deleteLessonAudio } from './audioStore.js';
 
 // Lessons being generated right now, by id. If the same lesson is requested again while
 // its generation is running (double click, two tabs, React StrictMode), the second
@@ -8,7 +9,7 @@ import { generateLessonContent } from './ai.service.js';
 const inFlight = new Map();
 
 /** The lesson and its course, or null if it doesn't exist or `creator` doesn't own it. */
-async function findOwnedLesson(lessonId, creator) {
+export async function findOwnedLesson(lessonId, creator) {
   const lesson = await Lesson.findById(lessonId);
   if (!lesson) return null;
 
@@ -75,5 +76,8 @@ export async function getOrGenerateLesson(lessonId, creator) {
 export async function regenerateLesson(lessonId, creator) {
   const owned = await findOwnedLesson(lessonId, creator);
   if (!owned) return null;
-  return generateAndSave(owned, { overwrite: true });
+  const lesson = await generateAndSave(owned, { overwrite: true });
+  // The old audio explains the old content; free its storage now rather than on next play.
+  await deleteLessonAudio([lesson._id]);
+  return lesson;
 }

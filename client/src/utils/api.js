@@ -99,3 +99,34 @@ export async function fetchVideos(query) {
   const { data } = await api.get('/youtube', { params: { query } });
   return data.videos;
 }
+
+// Creating an audio explanation takes ~30 s (script + speech); allow for a slow fallback.
+const AUDIO_TIMEOUT = 180_000;
+
+/** The lesson's audio explanation as a WAV Blob (created on the server on first request). */
+export async function fetchLessonAudio(lessonId, language = 'hinglish') {
+  try {
+    const { data } = await api.get(`/lessons/${lessonId}/audio`, {
+      params: { language },
+      responseType: 'blob',
+      timeout: AUDIO_TIMEOUT,
+    });
+    return data;
+  } catch (error) {
+    // With responseType 'blob' an error body arrives as a Blob too; decode its JSON so
+    // getErrorMessage() can show the server's message.
+    if (error.response?.data instanceof Blob) {
+      try {
+        error.response.data = JSON.parse(await error.response.data.text());
+      } catch {
+        // Not JSON: keep the generic message.
+      }
+    }
+    throw error;
+  }
+}
+
+export async function fetchAudioTranscript(lessonId, language = 'hinglish') {
+  const { data } = await api.get(`/lessons/${lessonId}/audio/transcript`, { params: { language } });
+  return data;
+}

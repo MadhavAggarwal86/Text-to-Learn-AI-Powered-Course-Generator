@@ -1,8 +1,14 @@
 import { z } from 'zod';
 import { env } from '../config/env.js';
 import { generateCoursePrompt } from '../prompts/coursePrompt.js';
+import { generateHinglishPrompt } from '../prompts/hinglishPrompt.js';
 import { generateLessonPrompt } from '../prompts/lessonPrompt.js';
-import { courseOutlineSchema, lessonContentSchema, toGeminiSchema } from '../prompts/schemas.js';
+import {
+  courseOutlineSchema,
+  hinglishScriptSchema,
+  lessonContentSchema,
+  toGeminiSchema,
+} from '../prompts/schemas.js';
 import { ApiError } from '../utils/ApiError.js';
 import { generateJSON, GeminiError } from './gemini.client.js';
 import { verifyResources } from './linkCheck.service.js';
@@ -13,6 +19,7 @@ const BLOCKED_REASONS = ['SAFETY', 'PROHIBITED_CONTENT', 'BLOCKLIST', 'SPII', 'R
 
 const outlineJsonSchema = toGeminiSchema(courseOutlineSchema);
 const lessonJsonSchema = toGeminiSchema(lessonContentSchema);
+const hinglishJsonSchema = toGeminiSchema(hinglishScriptSchema);
 
 /** Stage 1: topic → { title, description, tags, modules: [{ title, lessons: [title] }] }. */
 export async function generateCourseOutline({ topic, difficulty }) {
@@ -47,6 +54,21 @@ export async function generateLessonContent(input) {
   });
 
   return { ...lesson, resources: await verifyResources(lesson.resources, input.lessonTitle) };
+}
+
+/** Audio stage 1: a lesson's text → a short spoken Hinglish explanation (plain text). */
+export async function generateHinglishScript(input) {
+  const { system, user } = generateHinglishPrompt(input);
+  const { script } = await generateValidated({
+    task: 'Hinglish explanation',
+    system,
+    prompt: user,
+    schema: hinglishScriptSchema,
+    jsonSchema: hinglishJsonSchema,
+    temperature: 0.7,
+    maxOutputTokens: 4096,
+  });
+  return script;
 }
 
 /**

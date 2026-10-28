@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { Course, CourseModule, Lesson } from '../models/index.js';
+import { deleteLessonAudio } from './audioStore.js';
 
 /**
  * Saves a generated course outline as Course → Modules → Lesson stubs.
@@ -114,8 +115,14 @@ export async function listCourses(creator) {
   });
 }
 
-/** Deletes a course and all of its modules and lessons. Safe to call on partial trees. */
+/**
+ * Deletes a course and all of its modules, lessons and their stored audio. Safe to call on
+ * partial trees.
+ */
 export async function deleteCourseTree(courseId) {
+  const lessonIds = await Lesson.find({ course: courseId }).distinct('_id');
+  await deleteLessonAudio(lessonIds);
+
   const [lessons, modules, course] = await Promise.all([
     Lesson.deleteMany({ course: courseId }),
     CourseModule.deleteMany({ course: courseId }),

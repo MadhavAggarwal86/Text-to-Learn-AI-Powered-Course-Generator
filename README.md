@@ -91,6 +91,11 @@ npm run dev
    cached in MongoDB per query for 30 days, since the free quota allows only ~100 searches a day.
    The lesson shows the top 3 as a thumbnail that loads the privacy-enhanced
    `youtube-nocookie.com` player on click, with a YouTube search link as the fallback.
+5. **Hinglish audio:** on request, Gemini rewrites the lesson as a ~200-word spoken explanation in
+   Hinglish (Roman script, English technical terms), validated like the other AI output, and a
+   Gemini text-to-speech model reads it (WAV, ~1.5 minutes, ~20-30 s to make). The WAV is stored
+   in MongoDB GridFS with its transcript, served instantly afterwards, and deleted when the lesson
+   is regenerated or its course deleted.
 
 ## Frontend
 
@@ -104,6 +109,9 @@ npm run dev
   server the first time it is opened, and the sidebar marks it as opened right away.
 - **Layout:** sidebar with the course outline (a drawer on mobile), light/dark theme saved per
   browser, and a banner when the server is waking up (Render free tier).
+- **Hinglish audio:** "Explain in Hinglish" fetches the audio with the user's token (an `<audio
+src>` can't send one) and plays it from memory, with a progress counter while it is created,
+  a download link and an optional transcript.
 - **PDF download:** each lesson has a "Download PDF" button. A light, A4-width copy of the lesson
   is rendered off-screen and captured with html2canvas-pro (which understands Tailwind v4's
   `oklch()` colours), then cut into A4 pages by jsPDF. Page breaks only fall between blocks, and
@@ -115,21 +123,24 @@ npm run dev
 
 All responses are JSON; errors look like `{ "error": { "message", "details"? } }`.
 
-| Method | Path                          | Purpose                                                         |
-| ------ | ----------------------------- | --------------------------------------------------------------- |
-| GET    | `/api/health`                 | API and database status (public)                                |
-| GET    | `/api/users/me`               | The signed-in user's profile                                    |
-| POST   | `/api/courses/generate`       | `{ topic, difficulty? }` → generate and save a course (201)     |
-| GET    | `/api/courses`                | Your courses, newest first, with lesson and generated counts    |
-| GET    | `/api/courses/:id`            | Course with ordered modules and lesson titles                   |
-| DELETE | `/api/courses/:id`            | Delete a course with its modules and lessons (204)              |
-| GET    | `/api/lessons/:id`            | Lesson content; generated and saved the first time it is opened |
-| POST   | `/api/lessons/:id/regenerate` | Replace a lesson's content with a new version                   |
-| GET    | `/api/youtube?query=`         | Up to 3 embeddable YouTube videos for a query (cached 30 days)  |
+| Method | Path                                | Purpose                                                            |
+| ------ | ----------------------------------- | ------------------------------------------------------------------ |
+| GET    | `/api/health`                       | API and database status (public)                                   |
+| GET    | `/api/users/me`                     | The signed-in user's profile                                       |
+| POST   | `/api/courses/generate`             | `{ topic, difficulty? }` → generate and save a course (201)        |
+| GET    | `/api/courses`                      | Your courses, newest first, with lesson and generated counts       |
+| GET    | `/api/courses/:id`                  | Course with ordered modules and lesson titles                      |
+| DELETE | `/api/courses/:id`                  | Delete a course with its modules and lessons (204)                 |
+| GET    | `/api/lessons/:id`                  | Lesson content; generated and saved the first time it is opened    |
+| POST   | `/api/lessons/:id/regenerate`       | Replace a lesson's content with a new version                      |
+| GET    | `/api/youtube?query=`               | Up to 3 embeddable YouTube videos for a query (cached 30 days)     |
+| GET    | `/api/lessons/:id/audio`            | Hinglish audio explanation (`audio/wav`), created on first request |
+| GET    | `/api/lessons/:id/audio/transcript` | The spoken Hinglish script of that audio                           |
 
 - **Ownership:** other users' courses and lessons answer 404.
 - **Rate limits (per user):** 300 requests / 15 min overall, 10 course generations / hour,
-  20 lesson regenerations / hour, 60 video searches / hour (429 when exceeded).
+  20 lesson regenerations / hour, 60 video searches / hour, 30 audio requests / hour (429 when
+  exceeded).
 - **Authentication:** every route except `/api/health` needs `Authorization: Bearer <Auth0
 access token>` (401 otherwise). The token's signature, issuer, audience and expiry are
   verified; the user is saved with their Auth0 profile on first sign-in.

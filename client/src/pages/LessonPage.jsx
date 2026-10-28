@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import ErrorMessage from '../components/common/ErrorMessage.jsx';
 import LoadingSpinner from '../components/common/LoadingSpinner.jsx';
 import Skeleton from '../components/common/Skeleton.jsx';
+import AudioExplainer from '../components/AudioExplainer.jsx';
 import LessonRenderer from '../components/LessonRenderer.jsx';
 import LessonPDFExporter from '../components/pdf/LessonPDFExporter.jsx';
 import { useCourse, useLesson, useRegenerateLesson } from '../hooks/queries.js';
@@ -52,6 +53,11 @@ export default function LessonPage() {
             <LessonPDFExporter
               courseTitle={course.data.title}
               position={position}
+              lesson={lesson.data}
+            />
+            {/* Keyed by version so a regenerated lesson starts with a fresh player. */}
+            <AudioExplainer
+              key={`${lesson.data.id}-${lesson.data.updatedAt}`}
               lesson={lesson.data}
             />
           </div>

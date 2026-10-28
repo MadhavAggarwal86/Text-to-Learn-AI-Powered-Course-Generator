@@ -105,6 +105,29 @@ export const lessonContentSchema = z
     }
   });
 
+// ---------------------------------------------------------------------------
+// Hinglish audio script
+// ---------------------------------------------------------------------------
+
+const DEVANAGARI = /[ऀ-ॿ]/;
+const wordCount = (text) => text.split(/\s+/).filter(Boolean).length;
+
+// A little looser than the prompt's 180-280 words, so near-misses aren't retried.
+export const hinglishScriptSchema = z.object({
+  script: z
+    .string()
+    .trim()
+    .refine((s) => wordCount(s) >= 140 && wordCount(s) <= 340, {
+      message: 'script must be about 180-280 words',
+    })
+    .refine((s) => !DEVANAGARI.test(s), {
+      message: 'script must use Roman script (no Devanagari)',
+    })
+    .refine((s) => !/[*#`]|https?:\/\//.test(s), {
+      message: 'script must be plain spoken text (no Markdown, code or URLs)',
+    }),
+});
+
 /**
  * JSON Schema for Gemini's `responseJsonSchema`. Refinements are dropped, `$schema` is
  * removed and `oneOf` (from the discriminated union) becomes `anyOf`, which Gemini supports.

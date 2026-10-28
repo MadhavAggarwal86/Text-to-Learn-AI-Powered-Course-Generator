@@ -25,6 +25,11 @@ const envSchema = z.object({
   // Tried when the main model is overloaded or times out. Set to an empty value to disable.
   GEMINI_FALLBACK_MODEL: z.string().trim().default('gemini-3.1-flash-lite'),
   GEMINI_TIMEOUT_MS: z.coerce.number().int().positive().default(45_000),
+  // Text-to-speech for the Hinglish audio explanation (~20-35 s for 2 minutes of audio).
+  GEMINI_TTS_MODEL: z.string().trim().min(1).default('gemini-3.8-flash-lite-tts'),
+  GEMINI_TTS_FALLBACK_MODEL: z.string().trim().default('gemini-3.8-flash-tts'),
+  GEMINI_TTS_VOICE: z.string().trim().min(1).default('Kore'),
+  GEMINI_TTS_TIMEOUT_MS: z.coerce.number().int().positive().default(90_000),
 
   // Auth0. Required in production. Locally, leaving both empty runs the API as a single
   // dev user (see middlewares/auth.js) so it can be developed without an Auth0 tenant.
