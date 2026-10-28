@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const CACHE_TTL_SECONDS = 7 * 24 * 60 * 60;
+export const VIDEO_CACHE_TTL_SECONDS = 30 * 24 * 60 * 60;
 
 const videoSchema = new mongoose.Schema(
   {
@@ -12,12 +12,13 @@ const videoSchema = new mongoose.Schema(
   { _id: false, id: false },
 );
 
-// YouTube search results keyed by query. Each search costs 100 quota units,
-// so repeats are served from here; MongoDB's TTL index removes entries after 7 days.
+// YouTube search results keyed by query. Each search costs 100 of the 10,000 daily quota
+// units (~100 searches a day), so repeats are served from here for 30 days; MongoDB's TTL
+// index then removes the entry so a fresh search can pick up newer videos.
 const videoCacheSchema = new mongoose.Schema({
   query: { type: String, required: true, unique: true, trim: true, lowercase: true },
   results: { type: [videoSchema], default: [] },
-  createdAt: { type: Date, default: Date.now, expires: CACHE_TTL_SECONDS },
+  createdAt: { type: Date, default: Date.now, expires: VIDEO_CACHE_TTL_SECONDS },
 });
 
 export const VideoCache = mongoose.model('VideoCache', videoCacheSchema);

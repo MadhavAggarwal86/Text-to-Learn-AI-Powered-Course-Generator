@@ -30,6 +30,9 @@ const envSchema = z.object({
   // dev user (see middlewares/auth.js) so it can be developed without an Auth0 tenant.
   AUTH0_ISSUER: z.union([z.url(), z.literal('')]).default(''), // e.g. https://tenant.auth0.com/
   AUTH0_AUDIENCE: z.string().trim().default(''), // the Auth0 API identifier
+
+  // YouTube Data API v3. Optional: without it lessons show a "search on YouTube" link.
+  YOUTUBE_API_KEY: z.string().trim().default(''),
 });
 
 const parsed = envSchema
