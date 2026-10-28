@@ -1,6 +1,7 @@
 import { Menu, Moon, Sun } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext.jsx';
+import UserMenu from './UserMenu.jsx';
 
 export default function Topbar({ onMenuClick }) {
   const { theme, toggleTheme } = useTheme();
@@ -33,6 +34,7 @@ export default function Topbar({ onMenuClick }) {
           >
             {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </button>
+          <UserMenu />
         </div>
       </div>
     </header>
