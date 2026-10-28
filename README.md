@@ -86,6 +86,11 @@ npm run dev
 3. **Reliability:** invalid output is retried once with the validation errors attached; if the main
    model times out or is overloaded, a fallback model is used. AI-suggested links are checked and
    dead ones dropped.
+4. **Videos:** the lesson's AI-written search query goes to the YouTube Data API on the server
+   (the key never reaches the browser), filtered to embeddable, safe-search videos. Results are
+   cached in MongoDB per query for 30 days, since the free quota allows only ~100 searches a day.
+   The lesson shows the top 3 as a thumbnail that loads the privacy-enhanced
+   `youtube-nocookie.com` player on click, with a YouTube search link as the fallback.
 
 ## Frontend
 
@@ -114,10 +119,11 @@ All responses are JSON; errors look like `{ "error": { "message", "details"? } }
 | DELETE | `/api/courses/:id`            | Delete a course with its modules and lessons (204)              |
 | GET    | `/api/lessons/:id`            | Lesson content; generated and saved the first time it is opened |
 | POST   | `/api/lessons/:id/regenerate` | Replace a lesson's content with a new version                   |
+| GET    | `/api/youtube?query=`         | Up to 3 embeddable YouTube videos for a query (cached 30 days)  |
 
 - **Ownership:** other users' courses and lessons answer 404.
 - **Rate limits (per user):** 300 requests / 15 min overall, 10 course generations / hour,
-  20 lesson regenerations / hour (429 when exceeded).
+  20 lesson regenerations / hour, 60 video searches / hour (429 when exceeded).
 - **Authentication:** every route except `/api/health` needs `Authorization: Bearer <Auth0
 access token>` (401 otherwise). The token's signature, issuer, audience and expiry are
   verified; the user is saved with their Auth0 profile on first sign-in.
@@ -133,7 +139,9 @@ access token>` (401 otherwise). The token's signature, issuer, audience and expi
    rotation. Copy the **Domain** and **Client ID**.
 2. **Applications → APIs → Create API**, e.g. name "Text-to-Learn API", identifier
    `https://text-to-learn-api` (any URL-like string; it is not called). In its settings, enable
-   **Allow Offline Access** (needed for refresh tokens).
+   **Allow Offline Access** (needed for refresh tokens). Then, on the SPA's **API Access** tab
+   (or the API's **Application Access** tab), authorize the SPA for **User-delegated Access** to
+   this API; otherwise login fails with "Client … is not authorized to access resource server".
 3. Set the values:
    - `server/.env`: `AUTH0_ISSUER=https://<Domain>/`, `AUTH0_AUDIENCE=<API identifier>`
    - `client/.env`: `VITE_AUTH0_DOMAIN=<Domain>`, `VITE_AUTH0_CLIENT_ID=<Client ID>`,
@@ -144,7 +152,7 @@ access token>` (401 otherwise). The token's signature, issuer, audience and expi
 - **Backend → Render:** New Web Service, root directory `server`, build `npm install`,
   start `npm start`, health check path `/api/health`. Environment: `NODE_ENV=production`,
   `CLIENT_ORIGINS=<your Vercel URL>`, `MONGO_URI`, `GEMINI_API_KEY`, `AUTH0_ISSUER`,
-  `AUTH0_AUDIENCE`.
+  `AUTH0_AUDIENCE`, `YOUTUBE_API_KEY`.
 - **Frontend → Vercel:** import the repo, root directory `client` (Vite preset). Environment:
   `VITE_API_URL=<your Render URL>` and the three `VITE_AUTH0_*` values. Add the Vercel URL to
   the Auth0 application's callback, logout and web-origin URLs. `client/vercel.json` rewrites
