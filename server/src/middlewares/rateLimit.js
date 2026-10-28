@@ -37,6 +37,13 @@ export function createRateLimiters() {
     }),
     // Opening a lesson makes one video request; most are cache hits, but each miss uses
     // 1% of the shared daily YouTube quota.
+    // Creating an audio explanation is two AI calls (script + speech, ~30 s); replaying a
+    // stored one is cheap but still counted.
+    audio: limiter({
+      windowMs: HOUR,
+      limit: 30,
+      message: 'You can play up to 30 audio explanations per hour. Please try again later.',
+    }),
     videoSearch: limiter({
       windowMs: HOUR,
       limit: 60,
