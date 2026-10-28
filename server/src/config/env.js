@@ -15,7 +15,7 @@ const envSchema = z.object({
         .map((origin) => origin.trim())
         .filter(Boolean),
     ),
-  // Optional until Phase 1 adds the data models.
+  // Optional until the course API (Phase 3) needs it; tests use an in-memory server.
   MONGO_URI: z.string().trim().optional().default(''),
 });
 
