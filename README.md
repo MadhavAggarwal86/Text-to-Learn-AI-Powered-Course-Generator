@@ -164,16 +164,42 @@ access token>` (401 otherwise). The token's signature, issuer, audience and expi
    - `client/.env`: `VITE_AUTH0_DOMAIN=<Domain>`, `VITE_AUTH0_CLIENT_ID=<Client ID>`,
      `VITE_AUTH0_AUDIENCE=<API identifier>`
 
+## CI/CD
+
+- **CI** ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs on every pull request and
+  every push to `main`: formatting; server lint, tests and `npm audit`; client lint, tests,
+  production build and `npm audit`. It needs no secrets (AI, YouTube and Auth0 are mocked).
+- **CD:** Render deploys the API from `main` once CI has passed
+  ([render.yaml](render.yaml), `autoDeployTrigger: checksPass`); Vercel deploys the client from
+  `main` and builds a preview for every pull request.
+- **Workflow:** one feature branch per change, merged into `main` through a pull request. In
+  GitHub → Settings → Branches, protect `main` and require the three CI jobs to pass.
+- **Dependabot** opens weekly dependency-update pull requests, which go through the same CI.
+
 ## Deployment
 
-- **Backend → Render:** New Web Service, root directory `server`, build `npm install`,
-  start `npm start`, health check path `/api/health`. Environment: `NODE_ENV=production`,
-  `CLIENT_ORIGINS=<your Vercel URL>`, `MONGO_URI`, `GEMINI_API_KEY`, `AUTH0_ISSUER`,
-  `AUTH0_AUDIENCE`, `YOUTUBE_API_KEY`.
-- **Frontend → Vercel:** import the repo, root directory `client` (Vite preset). Environment:
-  `VITE_API_URL=<your Render URL>` and the three `VITE_AUTH0_*` values. Add the Vercel URL to
-  the Auth0 application's callback, logout and web-origin URLs. `client/vercel.json` rewrites
-  all paths to `index.html` so deep links work.
+Do these in order (each step needs a URL from the previous one):
+
+1. **MongoDB Atlas:** Network Access → allow `0.0.0.0/0` (Render has no fixed IP address).
+2. **Render (API):** New → Blueprint → this repository. It reads [render.yaml](render.yaml)
+   (Node 22, `server/`, `npm ci --omit=dev`, health check `/api/health`) and asks for the
+   secrets: `MONGO_URI`, `GEMINI_API_KEY`, `AUTH0_ISSUER`, `AUTH0_AUDIENCE`, `YOUTUBE_API_KEY`,
+   and `CLIENT_ORIGINS` (put a placeholder for now). Note the service URL, e.g.
+   `https://text-to-learn-api.onrender.com`.
+3. **Vercel (client):** Add New Project → this repository, root directory `client` (Vite
+   preset). Environment variables: `VITE_API_URL=<Render URL>`, `VITE_AUTH0_DOMAIN`,
+   `VITE_AUTH0_CLIENT_ID`, `VITE_AUTH0_AUDIENCE`. The build stops with a clear error if any is
+   missing. [client/vercel.json](client/vercel.json) adds SPA routing, security headers and
+   long-term caching for hashed assets.
+4. **Connect them:** set `CLIENT_ORIGINS=<Vercel URL>` on Render (comma-separate several, e.g.
+   a custom domain), and add the Vercel URL to the Auth0 application's Allowed Callback URLs,
+   Allowed Logout URLs and Allowed Web Origins.
+5. **Check:** open the Vercel URL, log in, generate a course, open a lesson (video, quiz),
+   download the PDF and play the Hinglish audio.
+
+Render's free tier sleeps after ~15 minutes without traffic; the first request then takes up to
+a minute, and the app shows a "waking up the server" banner meanwhile. Open the site a minute
+before a demo.
 
 ## License
 
