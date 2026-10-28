@@ -14,6 +14,9 @@ export default defineConfig({
       GEMINI_API_KEY: '',
       GEMINI_MODEL: 'test-primary-model',
       GEMINI_FALLBACK_MODEL: 'test-fallback-model',
+      // Most tests run as the dev user; tests/auth.test.js passes its own Auth0 config.
+      AUTH0_ISSUER: '',
+      AUTH0_AUDIENCE: '',
     },
   },
 });
