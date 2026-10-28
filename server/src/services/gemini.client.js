@@ -98,3 +98,35 @@ export async function generateJSON({
     usage: response.usageMetadata,
   };
 }
+
+/**
+ * One text-to-speech call. Returns the audio bytes and their MIME type: some models send a
+ * complete WAV file, others raw 16-bit PCM ("audio/L16;rate=24000"); utils/wav.js handles both.
+ */
+export async function generateSpeech({ model, text, voiceName, timeoutMs }) {
+  const ai = getClient();
+  const signal = AbortSignal.timeout(timeoutMs);
+
+  let response;
+  try {
+    response = await ai.models.generateContent({
+      model,
+      contents: [{ parts: [{ text }] }],
+      config: {
+        responseModalities: ['AUDIO'],
+        speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } },
+        abortSignal: signal,
+      },
+    });
+  } catch (err) {
+    throw classifyError(err, { timedOut: signal.aborted });
+  }
+
+  const audio = response.candidates?.[0]?.content?.parts?.find(
+    (part) => part.inlineData,
+  )?.inlineData;
+  if (!audio?.data) {
+    throw new GeminiError('Text-to-speech returned no audio', { kind: 'request' });
+  }
+  return { model, mimeType: audio.mimeType ?? '', data: Buffer.from(audio.data, 'base64') };
+}
