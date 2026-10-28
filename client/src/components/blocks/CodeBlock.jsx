@@ -6,7 +6,7 @@ import { resolveLanguage } from './prismLanguages.js';
 const COPIED_MS = 2000;
 
 /** Syntax-highlighted code with the language name and a copy button. Always dark. */
-export default function CodeBlock({ language, text }) {
+export default function CodeBlock({ language, text, showCopy = true }) {
   const prismLanguage = resolveLanguage(language);
   const code = text.replace(/\n+$/, '');
 
@@ -14,7 +14,7 @@ export default function CodeBlock({ language, text }) {
     <figure className="overflow-hidden rounded-xl border border-slate-800 bg-[#282c34] shadow-sm">
       <figcaption className="flex items-center justify-between border-b border-white/10 px-4 py-2 text-xs text-slate-400">
         <span className="font-mono">{language || 'code'}</span>
-        <CopyButton text={code} />
+        {showCopy && <CopyButton text={code} />}
       </figcaption>
       <Highlight code={code} language={prismLanguage} theme={themes.oneDark}>
         {({ className, style, tokens, getLineProps, getTokenProps }) => (

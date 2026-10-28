@@ -1,7 +1,8 @@
 @import 'tailwindcss';
 
 /* Class-based dark mode, toggled by ThemeContext (and set before paint in index.html). */
-@custom-variant dark (&:where(.dark, .dark *));
+/* Anything inside .force-light (e.g. the PDF export copy of a lesson) always uses light styles. */
+@custom-variant dark (&:where(.dark, .dark *):not(:where(.force-light, .force-light *)));
 
 @theme {
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;

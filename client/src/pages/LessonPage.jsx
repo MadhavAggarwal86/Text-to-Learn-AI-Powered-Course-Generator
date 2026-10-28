@@ -4,6 +4,7 @@ import ErrorMessage from '../components/common/ErrorMessage.jsx';
 import LoadingSpinner from '../components/common/LoadingSpinner.jsx';
 import Skeleton from '../components/common/Skeleton.jsx';
 import LessonRenderer from '../components/LessonRenderer.jsx';
+import LessonPDFExporter from '../components/pdf/LessonPDFExporter.jsx';
 import { useCourse, useLesson, useRegenerateLesson } from '../hooks/queries.js';
 import { useDocumentTitle } from '../hooks/useDocumentTitle.js';
 import { getErrorMessage, getErrorStatus } from '../utils/api.js';
@@ -46,6 +47,15 @@ export default function LessonPage() {
           Lesson {position.index + 1} of {position.total}
         </p>
         <h1 className="mt-1 text-3xl font-bold tracking-tight">{position.lesson.title}</h1>
+        {lesson.data && (
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <LessonPDFExporter
+              courseTitle={course.data.title}
+              position={position}
+              lesson={lesson.data}
+            />
+          </div>
+        )}
       </header>
 
       <div className="mt-6">
