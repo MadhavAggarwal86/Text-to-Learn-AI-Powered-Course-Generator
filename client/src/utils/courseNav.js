@@ -1,12 +1,16 @@
 // Course navigation helpers. URLs use 1-based positions so they read naturally:
 // /courses/:courseId/module/1/lesson/1 is the first lesson of the first module.
+// Shared courses use the same shape under /share/:shareId (pass that as `basePath`).
 
-export function lessonPath(courseId, moduleNumber, lessonNumber) {
-  return `/courses/${courseId}/module/${moduleNumber}/lesson/${lessonNumber}`;
+const ownCoursePath = (course) => `/courses/${course.id}`;
+export const sharedCoursePath = (shareId) => `/share/${shareId}`;
+
+export function lessonPath(courseId, moduleNumber, lessonNumber, basePath) {
+  return `${basePath ?? `/courses/${courseId}`}/module/${moduleNumber}/lesson/${lessonNumber}`;
 }
 
 /** Every lesson of a course in reading order, with its 1-based position and URL. */
-export function flattenLessons(course) {
+export function flattenLessons(course, basePath = course && ownCoursePath(course)) {
   if (!course?.modules) return [];
   return course.modules.flatMap((module, m) =>
     module.lessons.map((lesson, l) => ({
@@ -14,7 +18,7 @@ export function flattenLessons(course) {
       module,
       moduleNumber: m + 1,
       lessonNumber: l + 1,
-      path: lessonPath(course.id, m + 1, l + 1),
+      path: lessonPath(course.id, m + 1, l + 1, basePath),
     })),
   );
 }
@@ -23,8 +27,8 @@ export function flattenLessons(course) {
  * Finds the lesson at a URL position plus its neighbours (across module boundaries).
  * Positions come from URL params, so they may be strings or out of range.
  */
-export function locateLesson(course, moduleNumber, lessonNumber) {
-  const all = flattenLessons(course);
+export function locateLesson(course, moduleNumber, lessonNumber, basePath) {
+  const all = flattenLessons(course, basePath);
   const index = all.findIndex(
     (entry) =>
       entry.moduleNumber === Number(moduleNumber) && entry.lessonNumber === Number(lessonNumber),
@@ -40,13 +44,21 @@ export function locateLesson(course, moduleNumber, lessonNumber) {
   };
 }
 
-/** Where "Continue learning" should go: the first lesson not opened yet, else the first one. */
+/** Where "Continue learning" should go: the first lesson not completed yet, else the first one. */
 export function nextLessonToStudy(course) {
   const all = flattenLessons(course);
-  return all.find((entry) => !entry.lesson.isEnriched) ?? all[0] ?? null;
+  return all.find((entry) => !entry.lesson.completedAt) ?? all[0] ?? null;
 }
 
-export function countGenerated(course) {
+/** 'completed' | 'opened' (content generated, not completed) | 'new' */
+export function lessonStatus(lesson) {
+  if (lesson.completedAt) return 'completed';
+  return lesson.isEnriched ? 'opened' : 'new';
+}
+
+export function countProgress(course) {
   const all = flattenLessons(course);
-  return { total: all.length, generated: all.filter((entry) => entry.lesson.isEnriched).length };
+  const count = (status) => all.filter((entry) => lessonStatus(entry.lesson) === status).length;
+  const completed = count('completed');
+  return { total: all.length, completed, opened: completed + count('opened') };
 }

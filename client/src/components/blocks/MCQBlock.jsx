@@ -6,7 +6,8 @@ const LETTERS = 'ABCDEFGH';
 
 /**
  * One multiple-choice question: pick an option, check it, then see whether it was right
- * and why. The answer is locked after checking; `onAnswer(isCorrect)` feeds the quiz score.
+ * and why. The answer is locked after checking; `onAnswer(isCorrect, chosenIndex)` feeds the
+ * quiz score.
  */
 export default function MCQBlock({ question, options, answer, explanation, number, onAnswer }) {
   const id = useId();
@@ -17,7 +18,7 @@ export default function MCQBlock({ question, options, answer, explanation, numbe
   function check() {
     if (selected === null || checked) return;
     setChecked(true);
-    onAnswer?.(selected === answer);
+    onAnswer?.(selected === answer, selected);
   }
 
   function optionClass(index) {

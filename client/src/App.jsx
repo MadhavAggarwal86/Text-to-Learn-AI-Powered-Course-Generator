@@ -6,9 +6,11 @@ import AppLayout from './components/layout/AppLayout.jsx';
 import CoursePage from './pages/CoursePage.jsx';
 import Home from './pages/Home.jsx';
 import NotFound from './pages/NotFound.jsx';
+import SharedCoursePage from './pages/SharedCoursePage.jsx';
 
-// The lesson page carries the syntax highlighter, so it loads only when a lesson is opened.
+// Lesson pages carry the syntax highlighter, so they load only when a lesson is opened.
 const LessonPage = lazy(() => import('./pages/LessonPage.jsx'));
+const SharedLessonPage = lazy(() => import('./pages/SharedLessonPage.jsx'));
 
 export default function App() {
   return (
@@ -33,6 +35,16 @@ export default function App() {
                   <LessonPage />
                 </Suspense>
               </RequireAuth>
+            }
+          />
+          {/* Shared courses: public and read-only, no login needed. */}
+          <Route path="share/:shareId" element={<SharedCoursePage />} />
+          <Route
+            path="share/:shareId/module/:moduleNumber/lesson/:lessonNumber"
+            element={
+              <Suspense fallback={<Skeleton className="mx-auto h-96 max-w-3xl rounded-xl" />}>
+                <SharedLessonPage />
+              </Suspense>
             }
           />
           <Route path="*" element={<NotFound />} />

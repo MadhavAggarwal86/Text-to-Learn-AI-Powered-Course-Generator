@@ -1,10 +1,9 @@
 import { Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { capitalize, difficultyBadgeClass, formatDate, pluralize } from '../utils/format.js';
+import ProgressBar from './ProgressBar.jsx';
 
 export default function CourseCard({ course, onDelete, isDeleting }) {
-  const progress = course.lessonCount ? course.generatedCount / course.lessonCount : 0;
-
   return (
     <article className="card group relative flex flex-col p-5 transition-shadow hover:shadow-md">
       <div className="flex items-start justify-between gap-3">
@@ -43,22 +42,12 @@ export default function CourseCard({ course, onDelete, isDeleting }) {
           </span>
           <span>{formatDate(course.createdAt)}</span>
         </div>
-        <div
-          className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"
-          role="progressbar"
-          aria-label="Lessons opened"
-          aria-valuemin={0}
-          aria-valuemax={course.lessonCount}
-          aria-valuenow={course.generatedCount}
-        >
-          <div
-            className="h-full rounded-full bg-indigo-500"
-            style={{ width: `${progress * 100}%` }}
-          />
-        </div>
-        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-          {course.generatedCount} of {course.lessonCount} lessons opened
-        </p>
+        <ProgressBar
+          compact
+          completed={course.completedCount ?? 0}
+          opened={course.generatedCount}
+          total={course.lessonCount}
+        />
       </div>
     </article>
   );
