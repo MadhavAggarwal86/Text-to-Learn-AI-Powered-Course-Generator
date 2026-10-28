@@ -106,7 +106,8 @@ All responses are JSON; errors look like `{ "error": { "message", "details"? } }
 
 | Method | Path                          | Purpose                                                         |
 | ------ | ----------------------------- | --------------------------------------------------------------- |
-| GET    | `/api/health`                 | API and database status                                         |
+| GET    | `/api/health`                 | API and database status (public)                                |
+| GET    | `/api/users/me`               | The signed-in user's profile                                    |
 | POST   | `/api/courses/generate`       | `{ topic, difficulty? }` → generate and save a course (201)     |
 | GET    | `/api/courses`                | Your courses, newest first, with lesson and generated counts    |
 | GET    | `/api/courses/:id`            | Course with ordered modules and lesson titles                   |
@@ -117,17 +118,37 @@ All responses are JSON; errors look like `{ "error": { "message", "details"? } }
 - **Ownership:** other users' courses and lessons answer 404.
 - **Rate limits (per user):** 300 requests / 15 min overall, 10 course generations / hour,
   20 lesson regenerations / hour (429 when exceeded).
-- **Users (temporary):** until Auth0 is added, every request acts as one local user; the
-  `x-dev-user` header switches users for testing.
+- **Authentication:** every route except `/api/health` needs `Authorization: Bearer <Auth0
+access token>` (401 otherwise). The token's signature, issuer, audience and expiry are
+  verified; the user is saved with their Auth0 profile on first sign-in.
+- **Local dev without Auth0:** if `AUTH0_ISSUER`/`AUTH0_AUDIENCE` are empty, every request acts
+  as one local user and the `x-dev-user` header switches users for testing. The server refuses
+  to start like this in production.
+
+## Auth0 setup
+
+1. **Applications → Create Application → Single Page Application.** In its settings, add
+   `http://localhost:5173` (and later your Vercel URL) to **Allowed Callback URLs**,
+   **Allowed Logout URLs** and **Allowed Web Origins**. Under **Refresh Token Rotation**, enable
+   rotation. Copy the **Domain** and **Client ID**.
+2. **Applications → APIs → Create API**, e.g. name "Text-to-Learn API", identifier
+   `https://text-to-learn-api` (any URL-like string; it is not called). In its settings, enable
+   **Allow Offline Access** (needed for refresh tokens).
+3. Set the values:
+   - `server/.env`: `AUTH0_ISSUER=https://<Domain>/`, `AUTH0_AUDIENCE=<API identifier>`
+   - `client/.env`: `VITE_AUTH0_DOMAIN=<Domain>`, `VITE_AUTH0_CLIENT_ID=<Client ID>`,
+     `VITE_AUTH0_AUDIENCE=<API identifier>`
 
 ## Deployment
 
 - **Backend → Render:** New Web Service, root directory `server`, build `npm install`,
   start `npm start`, health check path `/api/health`. Environment: `NODE_ENV=production`,
-  `CLIENT_ORIGINS=<your Vercel URL>`, `MONGO_URI`.
+  `CLIENT_ORIGINS=<your Vercel URL>`, `MONGO_URI`, `GEMINI_API_KEY`, `AUTH0_ISSUER`,
+  `AUTH0_AUDIENCE`.
 - **Frontend → Vercel:** import the repo, root directory `client` (Vite preset). Environment:
-  `VITE_API_URL=<your Render URL>`. `client/vercel.json` rewrites all paths to `index.html` so
-  deep links work.
+  `VITE_API_URL=<your Render URL>` and the three `VITE_AUTH0_*` values. Add the Vercel URL to
+  the Auth0 application's callback, logout and web-origin URLs. `client/vercel.json` rewrites
+  all paths to `index.html` so deep links work.
 
 ## License
 

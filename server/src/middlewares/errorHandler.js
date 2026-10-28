@@ -1,3 +1,4 @@
+import { InvalidTokenError, UnauthorizedError } from 'express-oauth2-jwt-bearer';
 import mongoose from 'mongoose';
 import { isProduction } from '../config/env.js';
 import { ApiError } from '../utils/ApiError.js';
@@ -11,6 +12,16 @@ export function notFound(req, res, next) {
 export function errorHandler(err, req, res, next) {
   if (err instanceof mongoose.Error.CastError) {
     err = ApiError.badRequest(`Invalid ${err.path}`);
+  }
+  if (err instanceof UnauthorizedError) {
+    // Keep the WWW-Authenticate header the JWT middleware attaches (RFC 6750).
+    if (err.headers) res.set(err.headers);
+    err = new ApiError(
+      401,
+      err instanceof InvalidTokenError
+        ? 'Your session is invalid or has expired. Please log in again.'
+        : 'Please log in to continue.',
+    );
   }
 
   const statusCode = err.statusCode ?? err.status ?? 500;

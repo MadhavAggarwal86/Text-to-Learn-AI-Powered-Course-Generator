@@ -3,10 +3,15 @@ import express from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import { env, isProduction } from './config/env.js';
+import { authConfigFromEnv } from './middlewares/auth.js';
 import { errorHandler, notFound } from './middlewares/errorHandler.js';
 import { createApiRouter } from './routes/index.js';
 
-export function createApp() {
+/**
+ * `authConfig` defaults to Auth0 from the environment (null = local dev user); tests pass
+ * their own to sign tokens locally.
+ */
+export function createApp({ authConfig = authConfigFromEnv() } = {}) {
   const app = express();
 
   // Render sits behind one proxy; needed for correct client IPs in rate limiting.
@@ -26,7 +31,7 @@ export function createApp() {
   if (env.NODE_ENV !== 'test') app.use(morgan(isProduction ? 'combined' : 'dev'));
 
   app.get('/', (req, res) => res.json({ name: 'Text-to-Learn API', health: '/api/health' }));
-  app.use('/api', createApiRouter());
+  app.use('/api', createApiRouter({ authConfig }));
 
   app.use(notFound);
   app.use(errorHandler);
