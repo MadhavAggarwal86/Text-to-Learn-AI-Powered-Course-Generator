@@ -41,4 +41,24 @@ describe('CORS', () => {
 
     expect(res.headers['access-control-allow-origin']).toBe('http://localhost:5173');
   });
+
+  it('lets browsers cache the preflight answer', async () => {
+    const res = await request(app)
+      .options('/api/courses')
+      .set('Origin', 'http://localhost:5173')
+      .set('Access-Control-Request-Method', 'POST')
+      .set('Access-Control-Request-Headers', 'authorization,content-type');
+
+    expect(res.status).toBe(204);
+    expect(res.headers['access-control-max-age']).toBe('600');
+    expect(res.headers['access-control-allow-headers']).toMatch(/authorization/i);
+  });
+
+  it('refuses other websites with 403, not a server error', async () => {
+    const res = await request(app).get('/api/health').set('Origin', 'https://evil.example.com');
+
+    expect(res.status).toBe(403);
+    expect(res.body.error.message).toBe('Origin not allowed: https://evil.example.com');
+    expect(res.headers['access-control-allow-origin']).toBeUndefined();
+  });
 });

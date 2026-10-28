@@ -7,7 +7,8 @@ export async function connectDB() {
     return;
   }
 
-  await mongoose.connect(env.MONGO_URI);
+  // Fail fast at startup if Atlas is unreachable (wrong URI, IP not allowed) instead of 30 s.
+  await mongoose.connect(env.MONGO_URI, { serverSelectionTimeoutMS: 10_000 });
   console.log(`MongoDB connected: ${mongoose.connection.host}`);
 }
 
