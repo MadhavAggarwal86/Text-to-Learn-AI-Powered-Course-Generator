@@ -95,7 +95,8 @@ function LessonBody({ lesson }) {
       </section>
 
       <div className="mt-8">
-        <LessonRenderer content={lesson.content} />
+        {/* Keyed by version so the quiz resets after the lesson is regenerated. */}
+        <LessonRenderer key={`${lesson.id}-${lesson.updatedAt}`} content={lesson.content} />
       </div>
 
       {lesson.resources.length > 0 && (
