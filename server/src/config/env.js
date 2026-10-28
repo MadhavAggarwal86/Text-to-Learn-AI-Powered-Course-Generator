@@ -25,12 +25,25 @@ const envSchema = z.object({
   // Tried when the main model is overloaded or times out. Set to an empty value to disable.
   GEMINI_FALLBACK_MODEL: z.string().trim().default('gemini-3.1-flash-lite'),
   GEMINI_TIMEOUT_MS: z.coerce.number().int().positive().default(45_000),
+
+  // Auth0. Required in production. Locally, leaving both empty runs the API as a single
+  // dev user (see middlewares/auth.js) so it can be developed without an Auth0 tenant.
+  AUTH0_ISSUER: z.union([z.url(), z.literal('')]).default(''), // e.g. https://tenant.auth0.com/
+  AUTH0_AUDIENCE: z.string().trim().default(''), // the Auth0 API identifier
 });
 
 const parsed = envSchema
   .refine((vars) => vars.NODE_ENV !== 'production' || vars.MONGO_URI, {
     message: 'MONGO_URI is required in production',
     path: ['MONGO_URI'],
+  })
+  .refine((vars) => Boolean(vars.AUTH0_ISSUER) === Boolean(vars.AUTH0_AUDIENCE), {
+    message: 'Set both AUTH0_ISSUER and AUTH0_AUDIENCE, or neither',
+    path: ['AUTH0_AUDIENCE'],
+  })
+  .refine((vars) => vars.NODE_ENV !== 'production' || vars.AUTH0_ISSUER, {
+    message: 'Auth0 (AUTH0_ISSUER, AUTH0_AUDIENCE) is required in production',
+    path: ['AUTH0_ISSUER'],
   })
   .safeParse(process.env);
 
