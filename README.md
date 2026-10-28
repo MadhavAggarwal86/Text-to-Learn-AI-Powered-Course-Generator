@@ -104,6 +104,12 @@ npm run dev
   server the first time it is opened, and the sidebar marks it as opened right away.
 - **Layout:** sidebar with the course outline (a drawer on mobile), light/dark theme saved per
   browser, and a banner when the server is waking up (Render free tier).
+- **PDF download:** each lesson has a "Download PDF" button. A light, A4-width copy of the lesson
+  is rendered off-screen and captured with html2canvas-pro (which understands Tailwind v4's
+  `oklch()` colours), then cut into A4 pages by jsPDF. Page breaks only fall between blocks, and
+  never right after a heading, so text and questions are not split. Quizzes print without answers
+  plus an answer key, the video becomes a link, links stay clickable, and every page has a footer
+  with page numbers. The PDF libraries (~600 kB) load only on first use.
 
 ## REST API
 
