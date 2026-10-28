@@ -32,8 +32,8 @@ Return JSON with:
 - "keyTopics": ${keyTopics.min}-${keyTopics.max} short key topics covered.
 - "content": an ordered array of blocks. Allowed block shapes:
   {"type":"heading","text":"..."}
-  {"type":"paragraph","text":"..."}  (plain text; **bold** for key terms; "\\n" line breaks; "- " at the start of a line for list items)
-  {"type":"code","language":"python","text":"..."}
+  {"type":"paragraph","text":"..."}  (plain text; **bold** for key terms; \`inline code\` for identifiers; "\\n" line breaks; "- " at the start of a line for list items)
+  {"type":"code","language":"<language of this code>","text":"..."}
   {"type":"video","query":"..."}
   {"type":"mcq","question":"...","options":["...","...","..."],"answer":0,"explanation":"..."}
 - "resources": ${resources.min}-${resources.max} further readings as {"title","url"}.
@@ -44,6 +44,7 @@ Content rules:
 - Teach with concrete examples, analogies or worked cases; define every new term when it first appears.
 - Write at least 600 words of explanation in total across the paragraphs (up to about 1000). Short, list-like answers are not acceptable.
 - Add code blocks only if the topic is about programming or a technical tool; otherwise use none.
+- A code block's "language" must be the language the code is actually written in, as a lowercase id: e.g. "jsx" for React components, "javascript", "typescript", "python", "java", "sql", "bash", "html", "css".
 - Include exactly one video block: "query" is a YouTube search query of 3-8 words (never a URL).
 - End with ${mcqs.min + 1}-${mcqs.max} mcq blocks testing the objectives. Each has 3-4 options, "answer" is the 0-based index of the correct option, and "explanation" says why it is correct. Vary the position of the correct answer.
 - Resources: only well-known, stable pages you are confident exist (official documentation, Wikipedia, MDN, Khan Academy, university pages). Prefer top-level pages over deep links.`;
