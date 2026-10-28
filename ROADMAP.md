@@ -6,6 +6,29 @@ An AI course generator: the user types a topic, the app generates a course (3–
 
 **Judged on:** functionality · code quality · UI/UX · creativity.
 
+## Status
+
+All 13 phases are built. Each was developed on its own branch and merged into `main`.
+
+| Phase                                       | Status | Notes                                                                  |
+| ------------------------------------------- | ------ | ---------------------------------------------------------------------- |
+| 0 · Scaffold                                | ✅     | Local API port is 5050 (macOS AirPlay uses 5000)                       |
+| 1 · Data models                             | ✅     |                                                                        |
+| 2 · AI generation                           | ✅     | Gemini 3.5 Flash-Lite with 3.1 fallback; links checked                 |
+| 3 · Course and lesson API                   | ✅     |                                                                        |
+| 4 · Layout, routing, pages                  | ✅     | TanStack Query for data                                                |
+| 5 · Lesson rendering                        | ✅     |                                                                        |
+| 6 · Auth0                                   | ✅     | Local dev mode without Auth0                                           |
+| 7 · YouTube videos                          | ✅     | 30-day cache (quota is ~100 searches a day)                            |
+| 8 · PDF export                              | ✅     | html2canvas-pro (Tailwind v4 `oklch()` colours)                        |
+| 9 · Hinglish audio                          | ✅     | Stored in GridFS                                                       |
+| 10 · CI/CD and hardening                    | ✅     | GitHub Actions, Dependabot, Render blueprint                           |
+| 11 · Extras                                 | ✅     | Progress tracking and sharing; whole-course PDF left as future work    |
+| 12 · README and demo                        | ✅     | Screenshots and diagrams in README; [demo script](docs/DEMO_SCRIPT.md) |
+| Deploy (push, Render, Vercel), record video | ⏳     | Steps in the README; record using the demo script                      |
+
+The plan below is the original one, kept for reference; the README describes what was built.
+
 ---
 
 ## 1. Key decisions (and why)
