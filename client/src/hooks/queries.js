@@ -5,6 +5,7 @@ import {
   fetchCourses,
   fetchHealth,
   fetchLesson,
+  fetchVideos,
   generateCourse,
   regenerateLesson,
 } from '../utils/api.js';
@@ -14,6 +15,7 @@ export const queryKeys = {
   courses: ['courses'],
   course: (courseId) => ['course', courseId],
   lesson: (lessonId) => ['lesson', lessonId],
+  videos: (query) => ['videos', query.trim().toLowerCase()],
 };
 
 /** Marks one lesson as generated inside a cached course, so the sidebar updates at once. */
@@ -99,5 +101,16 @@ export function useRegenerateLesson() {
   return useMutation({
     mutationFn: regenerateLesson,
     onSuccess: (lesson) => queryClient.setQueryData(queryKeys.lesson(lesson.id), lesson),
+  });
+}
+
+/** YouTube videos for a lesson's video block. Results don't change, so fetch once per session. */
+export function useVideos(query) {
+  return useQuery({
+    queryKey: queryKeys.videos(query),
+    queryFn: () => fetchVideos(query),
+    staleTime: Infinity,
+    // The block falls back to a YouTube search link, so don't retry a failing search.
+    retry: false,
   });
 }
