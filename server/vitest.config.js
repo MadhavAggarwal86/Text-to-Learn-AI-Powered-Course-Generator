@@ -8,5 +8,12 @@ export default defineConfig({
     // The first run downloads a MongoDB binary (~100 MB), which can take a while.
     hookTimeout: 180_000,
     testTimeout: 20_000,
+    // These win over server/.env (dotenv never overrides existing variables), so tests
+    // never use the real Gemini key or depend on a developer's model choice.
+    env: {
+      GEMINI_API_KEY: '',
+      GEMINI_MODEL: 'test-primary-model',
+      GEMINI_FALLBACK_MODEL: 'test-fallback-model',
+    },
   },
 });
