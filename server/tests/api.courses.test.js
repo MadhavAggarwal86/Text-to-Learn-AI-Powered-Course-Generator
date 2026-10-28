@@ -138,6 +138,15 @@ describe('GET /api/courses/:id', () => {
     expect(res.body.modules.map((m) => m.title)).toEqual(['Module 1', 'Module 2', 'Module 3']);
   });
 
+  it('gzips the response for clients that accept it', async () => {
+    const { body: created } = await generate({ topic: 'Photosynthesis' });
+
+    const res = await request(app).get(`/api/courses/${created.id}`).set('Accept-Encoding', 'gzip');
+
+    expect(res.headers['content-encoding']).toBe('gzip');
+    expect(res.body.modules).toHaveLength(3); // supertest decompresses transparently
+  });
+
   it("answers 404 for someone else's course and for unknown ids", async () => {
     const { body: created } = await generate({ topic: 'Photosynthesis' });
 
