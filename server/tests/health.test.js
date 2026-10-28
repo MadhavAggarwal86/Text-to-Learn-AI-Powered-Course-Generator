@@ -31,7 +31,8 @@ describe('without a database connection', () => {
 
     expect(res.status).toBe(503);
     expect(res.body.error.message).toMatch(/database is not available/);
-    expect(Date.now() - startedAt).toBeLessThan(1000);
+    // Mongoose would otherwise buffer for 10 s. Allow a slow, busy CI machine some slack.
+    expect(Date.now() - startedAt).toBeLessThan(3000);
   });
 });
 

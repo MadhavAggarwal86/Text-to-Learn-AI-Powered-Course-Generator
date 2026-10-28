@@ -81,8 +81,10 @@ describe('GET /api/lessons/:id', () => {
 
   it('generates only once when the same lesson is requested concurrently', async () => {
     const { lessonId } = await seedCourse();
+    // Long enough that all three requests arrive while the first generation is still
+    // running, even on a busy machine (a real generation takes several seconds).
     generateLessonContent.mockImplementation(
-      () => new Promise((resolve) => setTimeout(() => resolve(validLessonReply()), 50)),
+      () => new Promise((resolve) => setTimeout(() => resolve(validLessonReply()), 500)),
     );
 
     const responses = await Promise.all([
