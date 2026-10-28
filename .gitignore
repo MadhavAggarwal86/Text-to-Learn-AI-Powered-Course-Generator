@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Environment files (commit only the .env.example files)
+.env
+.env.*
+!.env.example
+
+# Build output
+dist/
+build/
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Deploy tooling
+.vercel
+
+# Local Claude Code config
+.claude/
