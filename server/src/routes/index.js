@@ -5,6 +5,7 @@ import { requireDb } from '../middlewares/requireDb.js';
 import { createCourseRouter } from './course.routes.js';
 import healthRoutes from './health.routes.js';
 import { createLessonRouter } from './lesson.routes.js';
+import { createPublicRouter } from './public.routes.js';
 import { createUserRouter } from './user.routes.js';
 import { createVideoRouter } from './video.routes.js';
 
@@ -28,6 +29,8 @@ export function createApiRouter({ authConfig }) {
   router.use('/courses', ...signedIn, createCourseRouter(limiters));
   router.use('/lessons', ...signedIn, createLessonRouter(limiters));
   router.use('/youtube', ...signedIn, createVideoRouter(limiters));
+  // Shared courses: no login, rate-limited per IP.
+  router.use('/public', limiters.api, requireDb, createPublicRouter());
 
   return router;
 }

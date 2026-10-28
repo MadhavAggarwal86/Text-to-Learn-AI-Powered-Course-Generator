@@ -5,6 +5,7 @@ import {
   generateCourse,
   getCourse,
   getMyCourses,
+  putShare,
 } from '../controllers/course.controller.js';
 import { objectId, validate } from '../middlewares/validate.js';
 import { DIFFICULTIES, LIMITS } from '../models/constants.js';
@@ -19,6 +20,7 @@ const generateBody = z.object({
 });
 
 const idParams = z.object({ id: objectId });
+const shareBody = z.object({ shared: z.boolean({ error: 'shared must be true or false' }) });
 
 export function createCourseRouter(limiters) {
   const router = Router();
@@ -33,6 +35,7 @@ export function createCourseRouter(limiters) {
   router.get('/', getMyCourses);
   router.get('/:id', validate({ params: idParams }), getCourse);
   router.delete('/:id', validate({ params: idParams }), deleteCourse);
+  router.put('/:id/share', validate({ params: idParams, body: shareBody }), putShare);
 
   return router;
 }
