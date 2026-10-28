@@ -17,6 +17,8 @@ export default defineConfig({
       // Most tests run as the dev user; tests/auth.test.js passes its own Auth0 config.
       AUTH0_ISSUER: '',
       AUTH0_AUDIENCE: '',
+      // A fake key: YouTube calls are always stubbed in tests.
+      YOUTUBE_API_KEY: 'test-youtube-key',
     },
   },
 });

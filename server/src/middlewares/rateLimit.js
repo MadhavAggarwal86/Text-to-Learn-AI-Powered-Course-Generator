@@ -35,5 +35,12 @@ export function createRateLimiters() {
       limit: 20,
       message: 'You can regenerate up to 20 lessons per hour. Please try again later.',
     }),
+    // Opening a lesson makes one video request; most are cache hits, but each miss uses
+    // 1% of the shared daily YouTube quota.
+    videoSearch: limiter({
+      windowMs: HOUR,
+      limit: 60,
+      message: 'Too many video searches. Please try again later.',
+    }),
   };
 }

@@ -138,10 +138,10 @@ describe('VideoCache', () => {
     expect(hit.results[0].videoId).toBe('abc123');
   });
 
-  it('expires entries after 7 days via a TTL index', async () => {
+  it('expires entries after 30 days via a TTL index', async () => {
     const indexes = await VideoCache.collection.indexes();
     const ttl = indexes.find((i) => i.key.createdAt === 1);
 
-    expect(ttl.expireAfterSeconds).toBe(7 * 24 * 60 * 60);
+    expect(ttl.expireAfterSeconds).toBe(30 * 24 * 60 * 60);
   });
 });
