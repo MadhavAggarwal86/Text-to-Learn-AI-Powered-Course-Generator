@@ -62,18 +62,30 @@ npm run dev
 - Client: http://localhost:5173 (Vite proxies `/api` to the server)
 - API: http://localhost:5050/api/health
 
-`MONGO_URI` is optional until the data models land; without it the API runs and reports
-`database: not configured`.
+`MONGO_URI` is optional until the course API lands; without it the API runs and reports
+`database: not configured`. `GEMINI_API_KEY` comes from
+[Google AI Studio](https://aistudio.google.com/apikey).
 
 ## Scripts (from the repo root)
 
-| Command          | What it does                      |
-| ---------------- | --------------------------------- |
-| `npm run dev`    | Run server and client together    |
-| `npm run lint`   | ESLint on server and client       |
-| `npm test`       | Server tests (Vitest + Supertest) |
-| `npm run build`  | Production build of the client    |
-| `npm run format` | Format everything with Prettier   |
+| Command                          | What it does                                         |
+| -------------------------------- | ---------------------------------------------------- |
+| `npm run dev`                    | Run server and client together                       |
+| `npm run lint`                   | ESLint on server and client                          |
+| `npm test`                       | Server tests (Vitest + Supertest, AI calls mocked)   |
+| `npm run build`                  | Production build of the client                       |
+| `npm run format`                 | Format everything with Prettier                      |
+| `npm run ai:try --prefix server` | Generate real outlines and lessons for sample topics |
+
+## How course generation works
+
+1. **Outline:** the topic goes to Gemini with a JSON Schema built from the
+   [Zod schemas](server/src/prompts/schemas.js); the reply is validated (3–6 modules × 3–5 lessons).
+2. **Lessons:** each lesson's content (objectives, key topics, text, code, a video search query,
+   3–5 MCQs, resources) is generated the first time it is opened, then validated the same way.
+3. **Reliability:** invalid output is retried once with the validation errors attached; if the main
+   model times out or is overloaded, a fallback model is used. AI-suggested links are checked and
+   dead ones dropped.
 
 ## Deployment
 
