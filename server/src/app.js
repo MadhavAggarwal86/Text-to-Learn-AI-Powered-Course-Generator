@@ -4,12 +4,12 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import { env, isProduction } from './config/env.js';
 import { errorHandler, notFound } from './middlewares/errorHandler.js';
-import apiRoutes from './routes/index.js';
+import { createApiRouter } from './routes/index.js';
 
 export function createApp() {
   const app = express();
 
-  // Render sits behind a proxy; needed for correct client IPs (rate limiting later).
+  // Render sits behind one proxy; needed for correct client IPs in rate limiting.
   app.set('trust proxy', 1);
 
   app.use(helmet());
@@ -26,7 +26,7 @@ export function createApp() {
   if (env.NODE_ENV !== 'test') app.use(morgan(isProduction ? 'combined' : 'dev'));
 
   app.get('/', (req, res) => res.json({ name: 'Text-to-Learn API', health: '/api/health' }));
-  app.use('/api', apiRoutes);
+  app.use('/api', createApiRouter());
 
   app.use(notFound);
   app.use(errorHandler);
