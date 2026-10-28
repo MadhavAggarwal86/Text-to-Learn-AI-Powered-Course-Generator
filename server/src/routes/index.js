@@ -6,6 +6,7 @@ import { createCourseRouter } from './course.routes.js';
 import healthRoutes from './health.routes.js';
 import { createLessonRouter } from './lesson.routes.js';
 import { createUserRouter } from './user.routes.js';
+import { createVideoRouter } from './video.routes.js';
 
 /** `authConfig`: Auth0 settings, or null to run as the local dev user (see middlewares/auth.js). */
 export function createApiRouter({ authConfig }) {
@@ -26,6 +27,7 @@ export function createApiRouter({ authConfig }) {
   router.use('/users', ...signedIn, createUserRouter());
   router.use('/courses', ...signedIn, createCourseRouter(limiters));
   router.use('/lessons', ...signedIn, createLessonRouter(limiters));
+  router.use('/youtube', ...signedIn, createVideoRouter(limiters));
 
   return router;
 }

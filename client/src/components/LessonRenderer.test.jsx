@@ -1,7 +1,14 @@
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { renderWithQuery as render } from '../test/render.jsx';
 import LessonRenderer from './LessonRenderer.jsx';
+
+// No embedded videos here (VideoBlock.test.jsx covers them): the block shows its fallback.
+vi.mock('../utils/api.js', async (importOriginal) => ({
+  ...(await importOriginal()),
+  fetchVideos: vi.fn(async () => []),
+}));
 
 const mcq = (question, answer) => ({
   type: 'mcq',
@@ -22,13 +29,13 @@ const content = [
 ];
 
 describe('LessonRenderer', () => {
-  it('renders each block type in order', () => {
+  it('renders each block type in order', async () => {
     const { container } = render(<LessonRenderer content={content} />);
 
     expect(screen.getByRole('heading', { name: 'Introduction' })).toBeInTheDocument();
     expect(container.querySelector('strong')).toHaveTextContent('state');
     expect(container.querySelector('pre')).toHaveTextContent('useState(0)');
-    expect(screen.getByText('react hooks tutorial')).toBeInTheDocument();
+    expect(await screen.findByText('react hooks tutorial')).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'Check answer' })).toHaveLength(2);
   });
 

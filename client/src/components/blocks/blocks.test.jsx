@@ -7,7 +7,6 @@ import MCQBlock from './MCQBlock.jsx';
 import ParagraphBlock from './ParagraphBlock.jsx';
 import { resolveLanguage } from './prismLanguages.js';
 import { groupLines } from './richText.jsx';
-import VideoBlock from './VideoBlock.jsx';
 
 describe('ParagraphBlock', () => {
   it('renders **bold** and `code` as elements', () => {
@@ -179,17 +178,5 @@ describe('MCQBlock', () => {
     await user.keyboard('{Enter}');
 
     expect(screen.getByRole('status')).toHaveTextContent('Correct!');
-  });
-});
-
-describe('VideoBlock', () => {
-  it('shows the search query and links to YouTube results', () => {
-    render(<VideoBlock query="react hooks & state explained" />);
-
-    expect(screen.getByText('react hooks & state explained')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /watch on youtube/i })).toHaveAttribute(
-      'href',
-      'https://www.youtube.com/results?search_query=react%20hooks%20%26%20state%20explained',
-    );
   });
 });

@@ -93,3 +93,9 @@ export async function regenerateLesson(lessonId) {
   });
   return data;
 }
+
+/** Up to 3 embeddable YouTube videos for a lesson's video search query. */
+export async function fetchVideos(query) {
+  const { data } = await api.get('/youtube', { params: { query } });
+  return data.videos;
+}
