@@ -4,7 +4,7 @@ import { toWav, wavDurationSeconds } from '../utils/wav.js';
 import { generateHinglishScript } from './ai.service.js';
 import { deleteAudioFiles, findAudioFile, saveAudioFile } from './audioStore.js';
 import { generateSpeech, GeminiError } from './gemini.client.js';
-import { findOwnedLesson } from './lesson.service.js';
+import { contentVersion, findOwnedLesson } from './lesson.service.js';
 
 // Audio explanations of lessons. Only Hinglish for now; the map is where Hindi or other
 // languages would be added (each needs its own script prompt).
@@ -70,7 +70,7 @@ async function createAudio(lesson, language) {
   const saved = await saveAudioFile(wav, {
     lessonId: String(lesson._id),
     language,
-    lessonVersion: lesson.updatedAt.toISOString(),
+    lessonVersion: contentVersion(lesson),
     script,
     durationSec: Math.round(wavDurationSeconds(wav)),
     contentType: 'audio/wav',
@@ -84,8 +84,7 @@ async function createAudio(lesson, language) {
   return saved;
 }
 
-const isCurrent = (file, lesson) =>
-  file?.metadata?.lessonVersion === lesson.updatedAt.toISOString();
+const isCurrent = (file, lesson) => file?.metadata?.lessonVersion === contentVersion(lesson);
 
 /**
  * The stored WAV for a lesson's audio explanation (a GridFS file document), creating it on

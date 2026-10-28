@@ -130,3 +130,39 @@ export async function fetchAudioTranscript(lessonId, language = 'hinglish') {
   const { data } = await api.get(`/lessons/${lessonId}/audio/transcript`, { params: { language } });
   return data;
 }
+
+export async function setLessonProgress(lessonId, completed) {
+  const { data } = await api.put(`/lessons/${lessonId}/progress`, { completed });
+  return data;
+}
+
+/** Sends the chosen option index for each question; the server grades and saves it. */
+export async function submitQuiz(lessonId, answers) {
+  const { data } = await api.post(`/lessons/${lessonId}/quiz`, { answers });
+  return data;
+}
+
+/** Turns the course's public read-only link on or off; returns { shareId } (null when off). */
+export async function setCourseShared(courseId, shared) {
+  const { data } = await api.put(`/courses/${courseId}/share`, { shared });
+  return data;
+}
+
+// Shared courses: public endpoints, no token (they also work when logged out).
+export async function fetchSharedCourse(shareId) {
+  const { data } = await api.get(`/public/courses/${shareId}`, { public: true });
+  return data;
+}
+
+export async function fetchSharedLesson(shareId, lessonId) {
+  const { data } = await api.get(`/public/courses/${shareId}/lessons/${lessonId}`, {
+    public: true,
+  });
+  return data;
+}
+
+/** Previously found videos only: visitors never spend the owner's YouTube quota. */
+export async function fetchPublicVideos(query) {
+  const { data } = await api.get('/public/videos', { params: { query }, public: true });
+  return data.videos;
+}

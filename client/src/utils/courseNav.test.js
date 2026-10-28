@@ -1,13 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import {
-  countGenerated,
+  countProgress,
   flattenLessons,
   lessonPath,
+  lessonStatus,
   locateLesson,
   nextLessonToStudy,
 } from './courseNav.js';
 
-// Two modules: 2 lessons, then 3 lessons. Lesson 1.1 has been opened.
+const DONE = '2026-10-28T10:00:00.000Z';
+
+// Two modules: 2 lessons, then 3 lessons. Lesson 1.1 is completed, 1.2 opened.
 const course = {
   id: 'c1',
   modules: [
@@ -15,8 +18,8 @@ const course = {
       id: 'm1',
       title: 'Basics',
       lessons: [
-        { id: 'l11', title: 'One', isEnriched: true },
-        { id: 'l12', title: 'Two', isEnriched: false },
+        { id: 'l11', title: 'One', isEnriched: true, completedAt: DONE },
+        { id: 'l12', title: 'Two', isEnriched: true, completedAt: null },
       ],
     },
     {
@@ -86,16 +89,16 @@ describe('locateLesson', () => {
 });
 
 describe('nextLessonToStudy', () => {
-  it('picks the first lesson not opened yet', () => {
+  it('picks the first lesson not completed yet (an opened one counts as unfinished)', () => {
     expect(nextLessonToStudy(course).lesson.id).toBe('l12');
   });
 
-  it('falls back to the first lesson when everything has been opened', () => {
+  it('falls back to the first lesson when everything is completed', () => {
     const done = {
       ...course,
       modules: course.modules.map((m) => ({
         ...m,
-        lessons: m.lessons.map((l) => ({ ...l, isEnriched: true })),
+        lessons: m.lessons.map((l) => ({ ...l, isEnriched: true, completedAt: DONE })),
       })),
     };
 
@@ -103,8 +106,18 @@ describe('nextLessonToStudy', () => {
   });
 });
 
-describe('countGenerated', () => {
-  it('counts opened lessons', () => {
-    expect(countGenerated(course)).toEqual({ total: 5, generated: 1 });
+describe('lessonStatus', () => {
+  it.each([
+    [{ isEnriched: true, completedAt: DONE }, 'completed'],
+    [{ isEnriched: true, completedAt: null }, 'opened'],
+    [{ isEnriched: false }, 'new'],
+  ])('%j is %s', (lesson, status) => {
+    expect(lessonStatus(lesson)).toBe(status);
+  });
+});
+
+describe('countProgress', () => {
+  it('counts completed lessons, and opened ones including the completed', () => {
+    expect(countProgress(course)).toEqual({ total: 5, completed: 1, opened: 2 });
   });
 });

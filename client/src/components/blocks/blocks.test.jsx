@@ -151,7 +151,7 @@ describe('MCQBlock', () => {
 
     expect(screen.getByRole('status')).toHaveTextContent('Correct!');
     expect(screen.getByRole('status')).toHaveTextContent('useState returns a value and a setter.');
-    expect(onAnswer).toHaveBeenCalledWith(true);
+    expect(onAnswer).toHaveBeenCalledWith(true, 1); // correct, chose option B
   });
 
   it('shows the right answer after a wrong one and locks the question', async () => {
@@ -163,7 +163,7 @@ describe('MCQBlock', () => {
     await user.click(screen.getByRole('button', { name: 'Check answer' }));
 
     expect(screen.getByRole('status')).toHaveTextContent('Not quite. The answer is B.');
-    expect(onAnswer).toHaveBeenCalledWith(false);
+    expect(onAnswer).toHaveBeenCalledWith(false, 0); // wrong, chose option A
     expect(screen.queryByRole('button', { name: 'Check answer' })).toBeNull();
     for (const radio of screen.getAllByRole('radio')) expect(radio).toBeDisabled();
   });

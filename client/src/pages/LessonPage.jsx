@@ -1,12 +1,19 @@
-import { ChevronLeft, ChevronRight, ExternalLink, RefreshCw, Target } from 'lucide-react';
+import { CheckCircle2, ExternalLink, RefreshCw, Target } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import ErrorMessage from '../components/common/ErrorMessage.jsx';
 import LoadingSpinner from '../components/common/LoadingSpinner.jsx';
 import Skeleton from '../components/common/Skeleton.jsx';
 import AudioExplainer from '../components/AudioExplainer.jsx';
+import LessonPager from '../components/LessonPager.jsx';
 import LessonRenderer from '../components/LessonRenderer.jsx';
 import LessonPDFExporter from '../components/pdf/LessonPDFExporter.jsx';
-import { useCourse, useLesson, useRegenerateLesson } from '../hooks/queries.js';
+import {
+  useCourse,
+  useLesson,
+  useRegenerateLesson,
+  useSetLessonProgress,
+  useSubmitQuiz,
+} from '../hooks/queries.js';
 import { useDocumentTitle } from '../hooks/useDocumentTitle.js';
 import { getErrorMessage, getErrorStatus } from '../utils/api.js';
 import { locateLesson } from '../utils/courseNav.js';
@@ -56,10 +63,7 @@ export default function LessonPage() {
               lesson={lesson.data}
             />
             {/* Keyed by version so a regenerated lesson starts with a fresh player. */}
-            <AudioExplainer
-              key={`${lesson.data.id}-${lesson.data.updatedAt}`}
-              lesson={lesson.data}
-            />
+            <AudioExplainer key={contentKey(lesson.data)} lesson={lesson.data} />
           </div>
         )}
       </header>
@@ -69,7 +73,7 @@ export default function LessonPage() {
         {lesson.isError && (
           <ErrorMessage message={getErrorMessage(lesson.error)} onRetry={lesson.refetch} />
         )}
-        {lesson.data && <LessonBody lesson={lesson.data} />}
+        {lesson.data && <LessonBody lesson={lesson.data} courseId={courseId} />}
       </div>
 
       <LessonPager previous={position.previous} next={position.next} />
@@ -77,8 +81,13 @@ export default function LessonPage() {
   );
 }
 
-function LessonBody({ lesson }) {
+// Changes only when the lesson's content is (re)generated, not when progress is saved, so
+// the quiz and audio player reset for new content but not after marking a lesson complete.
+const contentKey = (lesson) => `${lesson.id}-${lesson.enrichedAt ?? lesson.updatedAt}`;
+
+function LessonBody({ lesson, courseId }) {
   const regenerate = useRegenerateLesson();
+  const submitQuiz = useSubmitQuiz(lesson.id, courseId);
 
   function handleRegenerate() {
     if (window.confirm('Replace this lesson with a newly generated version?')) {
@@ -111,8 +120,18 @@ function LessonBody({ lesson }) {
       </section>
 
       <div className="mt-8">
-        {/* Keyed by version so the quiz resets after the lesson is regenerated. */}
-        <LessonRenderer key={`${lesson.id}-${lesson.updatedAt}`} content={lesson.content} />
+        <LessonRenderer
+          key={contentKey(lesson)}
+          content={lesson.content}
+          quizResult={lesson.quizResult}
+          onQuizComplete={(answers) => submitQuiz.mutate(answers)}
+          onRetake={() => submitQuiz.reset()}
+          quizSave={{
+            status: quizSaveStatus(submitQuiz),
+            passed: submitQuiz.data?.passed,
+            onRetry: () => submitQuiz.mutate(submitQuiz.variables),
+          }}
+        />
       </div>
 
       {lesson.resources.length > 0 && (
@@ -139,6 +158,7 @@ function LessonBody({ lesson }) {
       )}
 
       <div className="mt-10 flex flex-wrap items-center gap-3 border-t border-slate-200 pt-6 dark:border-slate-800">
+        <CompletionToggle lesson={lesson} courseId={courseId} />
         <button
           type="button"
           onClick={handleRegenerate}
@@ -180,39 +200,6 @@ function LessonGenerating({ firstTime }) {
   );
 }
 
-function LessonPager({ previous, next }) {
-  return (
-    <nav
-      aria-label="Lesson navigation"
-      className="mt-10 grid gap-3 border-t border-slate-200 pt-6 sm:grid-cols-2 dark:border-slate-800"
-    >
-      {previous ? (
-        <Link to={previous.path} className="card flex items-center gap-3 p-4 hover:shadow-md">
-          <ChevronLeft className="h-5 w-5 shrink-0 text-slate-400" />
-          <span>
-            <span className="block text-xs text-slate-500">Previous</span>
-            <span className="font-medium">{previous.lesson.title}</span>
-          </span>
-        </Link>
-      ) : (
-        <span />
-      )}
-      {next && (
-        <Link
-          to={next.path}
-          className="card flex items-center justify-end gap-3 p-4 text-right hover:shadow-md"
-        >
-          <span>
-            <span className="block text-xs text-slate-500">Next</span>
-            <span className="font-medium">{next.lesson.title}</span>
-          </span>
-          <ChevronRight className="h-5 w-5 shrink-0 text-slate-400" />
-        </Link>
-      )}
-    </nav>
-  );
-}
-
 function LessonSkeleton() {
   return (
     <div className="mx-auto max-w-3xl space-y-4" aria-busy="true">
@@ -222,5 +209,42 @@ function LessonSkeleton() {
       <Skeleton className="h-4" />
       <Skeleton className="h-4 w-5/6" />
     </div>
+  );
+}
+
+function quizSaveStatus(mutation) {
+  if (mutation.isPending) return 'saving';
+  if (mutation.isError) return 'error';
+  if (mutation.isSuccess) return 'saved';
+  return 'idle';
+}
+
+function CompletionToggle({ lesson, courseId }) {
+  const progress = useSetLessonProgress(lesson.id, courseId);
+  const completed = Boolean(lesson.completedAt);
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => progress.mutate(!completed)}
+        disabled={progress.isPending}
+        aria-pressed={completed}
+        title={completed ? 'Click to mark as not completed' : undefined}
+        className={
+          completed
+            ? 'btn-secondary border-emerald-300 text-emerald-700 dark:border-emerald-800 dark:text-emerald-400'
+            : 'btn-primary'
+        }
+      >
+        <CheckCircle2 className="h-4 w-4" />
+        {completed ? 'Completed' : 'Mark as complete'}
+      </button>
+      {progress.isError && (
+        <span className="text-sm text-red-600 dark:text-red-400">
+          {getErrorMessage(progress.error)}
+        </span>
+      )}
+    </>
   );
 }

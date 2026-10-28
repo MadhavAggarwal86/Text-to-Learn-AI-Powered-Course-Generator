@@ -6,6 +6,7 @@ import {
   getCourseTree,
   listCourses,
 } from '../services/course.service.js';
+import { setCourseShared } from '../services/share.service.js';
 import { ApiError } from '../utils/ApiError.js';
 
 // Another user's course answers 404, not 403, so ids can't be probed for existence.
@@ -45,4 +46,15 @@ export async function deleteCourse(req, res) {
 
   await deleteCourseTree(owned._id);
   res.status(204).end();
+}
+
+/** PUT /api/courses/:id/share { shared }: turn the public read-only link on or off. */
+export async function putShare(req, res) {
+  const shareId = await setCourseShared(
+    req.validated.params.id,
+    req.user.sub,
+    req.validated.body.shared,
+  );
+  if (shareId === undefined) throw courseNotFound();
+  res.json({ shareId });
 }

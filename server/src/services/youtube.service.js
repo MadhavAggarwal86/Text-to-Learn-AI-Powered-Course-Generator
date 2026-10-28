@@ -92,6 +92,15 @@ async function searchAndCache(query) {
   return results;
 }
 
+/**
+ * Cached results only, never a YouTube call: for visitors of shared courses, whose
+ * requests must not spend the owner's daily quota. Empty if the query was never searched.
+ */
+export async function findCachedVideos(rawQuery) {
+  const cached = await VideoCache.findOne({ query: normalizeQuery(rawQuery) }).lean();
+  return cached?.results ?? [];
+}
+
 /** Up to 3 embeddable videos for a search query, from the cache when possible. */
 export async function findVideos(rawQuery) {
   const query = normalizeQuery(rawQuery);

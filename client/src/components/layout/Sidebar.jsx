@@ -1,17 +1,18 @@
-import { BookOpen, CheckCircle2, Circle, Plus, X } from 'lucide-react';
+import { BookOpen, Plus, X } from 'lucide-react';
 import { useEffect } from 'react';
 import { Link, NavLink, useParams } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthProvider.jsx';
-import { useCourse, useCourses } from '../../hooks/queries.js';
-import { lessonPath } from '../../utils/courseNav.js';
+import { useCourse, useCourses, useSharedCourse } from '../../hooks/queries.js';
+import { lessonPath, sharedCoursePath } from '../../utils/courseNav.js';
 import Skeleton from '../common/Skeleton.jsx';
+import LessonStatusIcon from '../LessonStatusIcon.jsx';
 
 /**
  * Inside a course: the course outline with the current lesson highlighted.
  * Elsewhere: the user's courses. A fixed column on large screens, a drawer below that.
  */
 export default function Sidebar({ open, onClose }) {
-  const { courseId } = useParams();
+  const { courseId, shareId } = useParams();
   const { isAuthenticated } = useAuth();
 
   useEffect(() => {
@@ -54,8 +55,10 @@ export default function Sidebar({ open, onClose }) {
         </div>
 
         <nav className="flex-1 overflow-y-auto px-2 pb-6">
-          {/* Course data needs a signed-in user; don't request it before login. */}
-          {!isAuthenticated ? (
+          {/* Shared courses are public; everything else needs a signed-in user. */}
+          {shareId ? (
+            <SharedOutlineNav shareId={shareId} onNavigate={onClose} />
+          ) : !isAuthenticated ? (
             <p className="px-2 text-sm text-slate-500 dark:text-slate-400">
               Log in to see your courses.
             </p>
@@ -146,19 +149,59 @@ function CourseOutlineNav({ courseId, onNavigate }) {
                     onClick={onNavigate}
                     className={navItemClass}
                   >
-                    {lesson.isEnriched ? (
-                      <CheckCircle2
-                        className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500"
-                        aria-label="Opened"
-                      />
-                    ) : (
-                      <Circle
-                        className="mt-0.5 h-4 w-4 shrink-0 opacity-40"
-                        aria-label="Not opened yet"
-                      />
-                    )}
+                    <LessonStatusIcon lesson={lesson} className="mt-0.5 h-4 w-4" />
                     <span>{lesson.title}</span>
                   </NavLink>
+                </li>
+              ))}
+            </ol>
+          </li>
+        ))}
+      </ol>
+    </>
+  );
+}
+
+/** The outline of a shared course; lessons the owner hasn't opened aren't links. */
+function SharedOutlineNav({ shareId, onNavigate }) {
+  const { data: course, isPending, isError } = useSharedCourse(shareId);
+  const base = sharedCoursePath(shareId);
+
+  if (isPending) return <NavSkeleton />;
+  if (isError) return <p className="px-2 text-sm text-slate-500">This link isn&apos;t shared.</p>;
+
+  return (
+    <>
+      <NavLink
+        to={base}
+        end
+        onClick={onNavigate}
+        className="mb-3 block rounded-md px-2 py-1.5 leading-snug font-semibold hover:text-indigo-700 dark:hover:text-indigo-300"
+      >
+        {course.title}
+      </NavLink>
+      <ol className="space-y-4">
+        {course.modules.map((module, m) => (
+          <li key={module.id}>
+            <h2 className="sidebar-heading">
+              Module {m + 1} · {module.title}
+            </h2>
+            <ol className="space-y-0.5">
+              {module.lessons.map((lesson, l) => (
+                <li key={lesson.id}>
+                  {lesson.isEnriched ? (
+                    <NavLink
+                      to={lessonPath(course.id, m + 1, l + 1, base)}
+                      onClick={onNavigate}
+                      className={navItemClass}
+                    >
+                      <span>{lesson.title}</span>
+                    </NavLink>
+                  ) : (
+                    <span className="block px-2 py-1.5 text-sm text-slate-400 dark:text-slate-600">
+                      {lesson.title}
+                    </span>
+                  )}
                 </li>
               ))}
             </ol>
