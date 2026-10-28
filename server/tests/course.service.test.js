@@ -79,7 +79,15 @@ describe('getCourseTree', () => {
     const { id } = await newCourse();
 
     const lesson = (await getCourseTree(id)).modules[0].lessons[0].toJSON();
-    expect(Object.keys(lesson).sort()).toEqual(['id', 'isEnriched', 'order', 'title']);
+    // Titles and progress only: the course page doesn't need the (large) lesson content.
+    expect(Object.keys(lesson).sort()).toEqual([
+      'completedAt',
+      'id',
+      'isEnriched',
+      'order',
+      'quizResult',
+      'title',
+    ]);
   });
 
   it('returns null for a course that does not exist', async () => {

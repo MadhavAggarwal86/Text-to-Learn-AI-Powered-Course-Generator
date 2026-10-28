@@ -73,7 +73,7 @@ export async function getCourseTree(courseId, { creator } = {}) {
     options: { sort: { order: 1 } },
     populate: {
       path: 'lessons',
-      select: 'title order isEnriched',
+      select: 'title order isEnriched completedAt quizResult',
       options: { sort: { order: 1 } },
     },
   });
@@ -98,6 +98,9 @@ export async function listCourses(creator) {
         _id: '$course',
         lessonCount: { $sum: 1 },
         generatedCount: { $sum: { $cond: ['$isEnriched', 1, 0] } },
+        completedCount: {
+          $sum: { $cond: [{ $ne: [{ $ifNull: ['$completedAt', null] }, null] }, 1, 0] },
+        },
       },
     },
   ]);
@@ -111,6 +114,7 @@ export async function listCourses(creator) {
       moduleCount: modules.length,
       lessonCount: count?.lessonCount ?? 0,
       generatedCount: count?.generatedCount ?? 0,
+      completedCount: count?.completedCount ?? 0,
     };
   });
 }

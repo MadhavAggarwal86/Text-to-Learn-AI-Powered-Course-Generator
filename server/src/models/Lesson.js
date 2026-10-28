@@ -9,6 +9,18 @@ const resourceSchema = new mongoose.Schema(
   { _id: false, id: false },
 );
 
+// The learner's quiz results for the current content: latest attempt and best score.
+const quizResultSchema = new mongoose.Schema(
+  {
+    correct: { type: Number, required: true, min: 0 },
+    total: { type: Number, required: true, min: 1 },
+    bestCorrect: { type: Number, required: true, min: 0 },
+    attempts: { type: Number, required: true, min: 1 },
+    takenAt: { type: Date, required: true },
+  },
+  { _id: false, id: false },
+);
+
 const isValidBlock = (block) =>
   block !== null && typeof block === 'object' && BLOCK_TYPES.includes(block.type);
 
@@ -33,6 +45,14 @@ const lessonSchema = new mongoose.Schema(
     },
     resources: { type: [resourceSchema], default: [] },
     isEnriched: { type: Boolean, default: false },
+    // When the current content was generated. Unlike updatedAt it doesn't change when
+    // progress is saved, so it versions things derived from the content (stored audio,
+    // the quiz on screen).
+    enrichedAt: { type: Date, default: null },
+
+    // Learner progress (each lesson belongs to one user, the course's creator).
+    completedAt: { type: Date, default: null },
+    quizResult: { type: quizResultSchema, default: null },
   },
   schemaOptions,
 );
