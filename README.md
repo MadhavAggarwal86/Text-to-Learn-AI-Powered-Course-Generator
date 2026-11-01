@@ -332,7 +332,6 @@ All responses are JSON; errors look like `{ "error": { "message", "details"? } }
   Branches, protect `main` and require the three CI jobs to pass.
 - **Dependabot** opens weekly dependency-update pull requests, which go through the same CI.
 
-
 ## License
 
 [MIT](LICENSE)
