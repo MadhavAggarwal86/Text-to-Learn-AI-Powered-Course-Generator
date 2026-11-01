@@ -332,51 +332,6 @@ All responses are JSON; errors look like `{ "error": { "message", "details"? } }
   Branches, protect `main` and require the three CI jobs to pass.
 - **Dependabot** opens weekly dependency-update pull requests, which go through the same CI.
 
-## Deployment
-
-Do these in order (each step needs a URL from the previous one):
-
-1. **MongoDB Atlas:** Network Access → allow `0.0.0.0/0` (Render has no fixed IP address).
-2. **Render (API):** New → Blueprint → this repository. It reads [render.yaml](render.yaml)
-   (Node 22, `server/`, `npm ci --omit=dev`, health check `/api/health`) and asks for the
-   secrets: `MONGO_URI`, `GEMINI_API_KEY`, `AUTH0_ISSUER`, `AUTH0_AUDIENCE`, `YOUTUBE_API_KEY`,
-   and `CLIENT_ORIGINS` (put a placeholder for now). Note the service URL, e.g.
-   `https://text-to-learn-api.onrender.com`.
-3. **Vercel (client):** Add New Project → this repository, root directory `client` (Vite
-   preset). Environment variables: `VITE_API_URL=<Render URL>`, `VITE_AUTH0_DOMAIN`,
-   `VITE_AUTH0_CLIENT_ID`, `VITE_AUTH0_AUDIENCE`. The build stops with a clear error if any is
-   missing. [client/vercel.json](client/vercel.json) adds SPA routing, security headers and
-   long-term caching for hashed assets.
-4. **Connect them:** set `CLIENT_ORIGINS=<Vercel URL>` on Render (comma-separate several, e.g.
-   a custom domain), and add the Vercel URL to the Auth0 application's Allowed Callback URLs,
-   Allowed Logout URLs and Allowed Web Origins.
-5. **Check:** open the Vercel URL, log in, generate a course, open a lesson (video, quiz),
-   download the PDF, play the Hinglish audio and open a share link in a private window.
-
-Render's free tier sleeps after ~15 minutes without traffic; the first request then takes up to
-a minute, and the app shows a "waking up the server" banner meanwhile. Open the site a minute
-before a demo.
-
-## Known limitations
-
-- **Free tiers:** Render cold starts (~1 minute after idling); YouTube allows ~100 uncached
-  searches a day; Gemini free-tier rate limits apply. Caching and per-user limits soften these.
-- **AI accuracy:** content is validated for structure and links are checked, but facts are not
-  verified. Lessons can be regenerated.
-- **PDFs are images of the page:** text in the PDF can't be selected or searched (html2canvas
-  approach); links stay clickable through link annotations.
-- **Audio is WAV:** about 3 MB per minute in storage; one language (Hinglish) so far.
-- **Shared courses** show only the lessons the owner has opened.
-- **Duplicate-generation guard** is per server instance; with several instances the conditional
-  database write still prevents overwrites, but an extra AI call could happen.
-
-## Future work
-
-- Compress audio to MP3/Opus (~10× smaller) and add Hindi and Tamil voices.
-- Text-based PDFs and a whole-course export.
-- "Copy to my courses" for shared courses, and spaced-repetition review of missed quiz questions.
-- Stream generation progress to the client (Server-Sent Events).
-- End-to-end browser tests (Playwright) in CI.
 
 ## License
 
