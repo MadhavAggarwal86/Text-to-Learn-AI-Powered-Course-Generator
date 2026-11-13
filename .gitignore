@@ -26,3 +26,7 @@ npm-debug.log*
 
 # Local Claude Code config
 .claude/
+
+# Personal notes
+ROADMAP.md
+docs/DEMO_SCRIPT.md
