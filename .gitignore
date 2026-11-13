@@ -24,5 +24,6 @@ npm-debug.log*
 # Deploy tooling
 .vercel
 
-# Local Claude Code config
-.claude/
+# Personal notes
+ROADMAP.md
+docs/DEMO_SCRIPT.md
