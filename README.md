@@ -5,8 +5,8 @@ structured online course: 3–6 modules of 3–5 lessons, each with objectives, 
 an embedded YouTube video, a quiz and further reading. Lessons can be downloaded as PDF, explained
 aloud in Hinglish, tracked as you study, and shared with a read-only link.
 
-**Live demo:** _add the Vercel URL after deploying_ · **API:** _add the Render URL_ ·
-**Demo video:** _add the link_
+**Live demo:** will be added soon · **API:** will be added soon ·
+**Demo video:** will be added soon
 
 ![Home page with the topic form and course cards](docs/screenshots/home.jpg)
 
